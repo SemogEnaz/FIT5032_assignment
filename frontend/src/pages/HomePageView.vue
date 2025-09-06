@@ -8,6 +8,55 @@
 
     <About :aboutText="aboutText" />
 
+    <!-- EVENTS HIGHLIGHT (3 cards) -->
+    <section class="section events">
+      <div class="container">
+        <div class="section__header">
+          <h2 class="section__title">Upcoming Events</h2>
+          <router-link class="link-more" to="/events">View all events →</router-link>
+        </div>
+
+        <div class="cards">
+          <article v-for="event in topEvents" :key="event.id" class="card">
+            <EventCard 
+                :start="event.start"
+                :title="event.title"
+                :location="event.location"
+                :summary="events.summary"
+                :id="events.id"/>
+          </article>
+
+          <!-- Empty state -->
+          <div v-if="topEvents.length === 0" class="empty">
+            <p>No upcoming events yet. Check back soon!</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BLOG HIGHLIGHT (latest) -->
+    <section class="section blog">
+      <div class="container">
+        <div class="section__header">
+          <h2 class="section__title">From the Blog</h2>
+          <router-link class="link-more" to="/blog">Browse all posts →</router-link>
+        </div>
+
+        <article v-if="latestPost" class="post">
+          <img v-if="latestPost.cover" :src="latestPost.cover" class="post__img" :alt="latestPost.title"/>
+          <div class="post__body">
+            <h3 class="post__title">{{ latestPost.title }}</h3>
+            <p class="post__meta">{{ formatLongDate(latestPost.date) }}</p>
+            <p class="post__excerpt">{{ latestPost.excerpt || "" }}</p>
+            <router-link class="btn btn--sm" :to="`/blog/${latestPost.slug}`">Read more</router-link>
+          </div>
+        </article>
+
+        <div v-else class="empty">
+          <p>No blog posts yet. Stay tuned!</p>
+        </div>
+      </div>
+    </section>
   </main>
 </template>
 
@@ -21,6 +70,57 @@ const heroImg = 'https://quedos.com.au/wp-content/uploads/2022/07/man-playing-bi
 const ctaTitle = 'Join the Club — Play, Learn, Compete';
 const ctaSubtitle = 'Social nights, coaching clinics, and competitions for all levels.';
 const aboutText = "We're a friendly local club running weekly events, coaching sessions, and social play. New players are always welcome.";
+
+const events = [
+    {
+    id: 'open-night',
+    title: 'Club Open Night',
+    start: new Date().toISOString(),
+    location: 'Main Hall, 123 King St',
+    summary: 'Meet the community, try the tables, and enjoy free coaching.'
+    },
+    {
+    id: 'junior-comp',
+    title: 'Junior Competition Round 1',
+    start: new Date(Date.now() + 86400000 * 3).toISOString(),
+    location: 'Court 2',
+    summary: 'First round of the junior league with prizes.'
+    },
+    {
+    id: 'coaching-clinic',
+    title: 'Coaching Clinic',
+    start: new Date(Date.now() + 86400000 * 10).toISOString(),
+    location: 'Training Room',
+    summary: 'Small group technique clinic with our head coach.'
+    }
+];
+
+const posts = [
+    {
+    slug: 'season-kickoff',
+    title: 'Season Kickoff: What to Expect',
+    date: new Date().toISOString(),
+    excerpt: 'New fixtures, coaching programs, and social nights—here’s what’s coming.',
+    cover: 'https://images.unsplash.com/photo-1516541196182-6bdb0516ed27?q=80&w=1600&auto=format&fit=crop'
+    }
+]
+
+const topEvents = computed(() => {
+  return (events || [])
+    .slice()
+    .sort((a, b) => new Date(a.start) - new Date(b.start))
+    .slice(0, 3)
+})
+
+const latestPost = computed(() => {
+  if (!posts || posts.length === 0) return null
+  return posts.slice().sort((a, b) => new Date(b.date) - new Date(a.date))[0]
+})
+
+function formatLongDate(iso) {
+  const d = new Date(iso)
+  return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+}
 
 </script>
 
