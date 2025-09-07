@@ -53,6 +53,7 @@
               <p class="text-muted mb-2" v-if="e.location">📍 {{ e.location }}</p>
               <p class="mb-3 mx-2">{{ e.summary }}</p>
               <router-link class="btn btn-dark btn-sm" :to="`/events/${e.id}`">Details</router-link>
+              <RatingWidget :item-id="e.id" kind="event" class="mt-3" />
             </div>
           </div>
         </div>
@@ -66,6 +67,7 @@
 </template>
 
 <script setup>
+import RatingWidget from '../components/RatingWidget.vue'
 import { computed, ref } from 'vue'
 
 const events = ref([
