@@ -146,6 +146,27 @@ const isLogin = ref(true)
 const login = ref({ email: '', password: '' })
 const loginError = ref('')
 
+/* -------------------- ADMIN SEED -------------------- */
+const ADMIN_USER = {
+  id: 'admin',
+  firstName: 'Admin',
+  lastName: 'User',
+  email: 'admin@claytonpool.local',
+  password: 'Admin#123',     // demo only
+  address: '',
+  phone: '',
+  role: 'admin'
+};
+
+// ensure admin exists once in localStorage
+(function ensureAdminSeed(){
+  const list = JSON.parse(localStorage.getItem('users') || '[]');
+  if (!list.some(u => u.email.toLowerCase() === ADMIN_USER.email.toLowerCase())) {
+    list.push(ADMIN_USER);
+    localStorage.setItem('users', JSON.stringify(list));
+  }
+})();
+
 // register form state
 const register = ref({
   firstName: '',
@@ -245,28 +266,34 @@ function setSessionUser(user) {
 
 /* -------------------- submit handlers -------------------- */
 function submitLogin() {
-  loginError.value = ''
-  validateLoginEmail(true)
-  if (errors.value.loginEmail) return
+  loginError.value = '';
+  validateLoginEmail(true);
+  if (errors.value.loginEmail) return;
 
-  const users = getUsers()
-  const found = users.find(u => u.email === login.value.email)
-
-  if (!found) {
-    loginError.value = 'Account does not exist — please register.'
-    // Requirement: error should render via v-if (fulfilled by loginError)
-    return
-  }
-  if (found.password !== login.value.password) {
-    loginError.value = 'Invalid email or password.'
-    return
+  // 1) Hard-coded admin short-circuit
+  if (
+    login.value.email.toLowerCase() === ADMIN_USER.email.toLowerCase() &&
+    login.value.password === ADMIN_USER.password
+  ) {
+    setSessionUser(ADMIN_USER);                           // sets cookies + session
+    window.dispatchEvent(new StorageEvent('storage', { key: 'sessionUser' }));
+    router.push('/');                                     // go home
+    return;
   }
 
-  setSessionUser(found) // sets cookies + localStorage (incl. loginSuccess=true)
-  loginError.value = ''
-    window.dispatchEvent(new StorageEvent('storage', { key: 'sessionUser' }))
-  router.push('/')
+  // 2) Normal member login
+  const users = getUsers();
+  const found = users.find(u => u.email.toLowerCase() === login.value.email.toLowerCase());
 
+  if (!found) { loginError.value = 'Account does not exist — please register.'; return; }
+  if (found.password !== login.value.password) { loginError.value = 'Invalid email or password.'; return; }
+
+  // If someone manually edited storage, force admin role on admin email
+  if (found.email.toLowerCase() === ADMIN_USER.email.toLowerCase()) found.role = 'admin';
+
+  setSessionUser(found);
+  window.dispatchEvent(new StorageEvent('storage', { key: 'sessionUser' }));
+  router.push('/');
 }
 
 function submitRegister() {
@@ -278,6 +305,12 @@ function submitRegister() {
   validateConfirmPassword(true)
 
   if (errors.value.userName || errors.value.email || errors.value.password || errors.value.confirmPassword || !isPasswordsMatch.value) return
+
+    if (register.value.email.toLowerCase() === ADMIN_USER.email.toLowerCase()) {
+    registerError.value = 'This email is reserved for the administrator.';
+    return;
+    }
+
 
   const users = getUsers();
   if (users.find(u => u.email === register.value.email)) {
