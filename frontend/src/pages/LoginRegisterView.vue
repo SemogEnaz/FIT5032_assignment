@@ -304,7 +304,11 @@ function submitRegister() {
   validatePassword(true)
   validateConfirmPassword(true)
 
-  if (errors.value.userName || errors.value.email || errors.value.password || errors.value.confirmPassword || !isPasswordsMatch.value) return
+  if (errors.value.userName || 
+      errors.value.email || 
+      errors.value.password || 
+      errors.value.confirmPassword || 
+      !isPasswordsMatch.value) return
 
     if (register.value.email.toLowerCase() === ADMIN_USER.email.toLowerCase()) {
     registerError.value = 'This email is reserved for the administrator.';
