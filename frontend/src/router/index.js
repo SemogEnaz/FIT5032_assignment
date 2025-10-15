@@ -7,6 +7,7 @@ import Newsletters from '@/pages/Newsletters.vue';
 import LoginRegisterView from '@/pages/LoginRegisterView.vue';
 import FirebaseSigninView from '@/pages/FirebaseSigninView.vue';
 import FirebaseRegister from '@/pages/FirebaseRegister.vue';
+import AddBookView from '@/pages/AddBookView.vue';
 
 const routes = [
     { path: '/', name: "homePage", component: HomePageView },
@@ -16,6 +17,7 @@ const routes = [
     { path: '/loginRegister', name: "loginregister", component: LoginRegisterView},
     { path: '/FireLogin', name: 'FireLogin', component: FirebaseSigninView },
     { path: '/FireRegister', name: 'FireRegister', component: FirebaseRegister },
+    { path: '/addBook', name: 'AddBook', component: AddBookView },
 ]
 
 const router = createRouter({

@@ -25,6 +25,10 @@
           <RouterLink class="nav-link" to="/FireLogin">FireLogin</RouterLink>
         </li>
 
+        <li class="nav-item">
+          <RouterLink class="nav-link" to="/addBook">AddBook</RouterLink>
+        </li>
+
         <!-- AUTH SLOT -->
         <li class="nav-item" @click="logout" v-if="isLoggedIn">
             Logout
