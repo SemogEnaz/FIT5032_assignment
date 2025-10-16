@@ -39,7 +39,7 @@
         {{ loginError }}
       </div>
 
-      <button class="btn btn-dark">Login</button>
+      <button class="btn btn-dark" :disabled="busy">{{ busy ? 'Signing in…' : 'Login' }}</button>
     </form>
 
     <!-- REGISTER -->
@@ -129,45 +129,31 @@
         {{ registerError }}
       </div>
 
-      <button class="btn btn-dark mt-3">Create account</button>
+      <button class="btn btn-dark mt-3" :disabled="busy">{{ busy ? 'Creating…' : 'Create account' }}</button>
     </form>
   </main>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+
+// 🔥 Firebase Auth
+import { getAuth, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, updateProfile } from 'firebase/auth'
+// make sure your firebase app is initialized once (e.g., in src/firebase/init.js)
+const auth = getAuth()
+
 const router = useRouter()
 
 /* -------------------- state -------------------- */
 const isLogin = ref(true)
+const busy = ref(false)
 
-// login form state
+// login form
 const login = ref({ email: '', password: '' })
 const loginError = ref('')
 
-/* -------------------- ADMIN SEED -------------------- */
-const ADMIN_USER = {
-  id: 'admin',
-  firstName: 'Admin',
-  lastName: 'User',
-  email: 'admin@claytonpool.local',
-  password: 'Admin#123',     // demo only
-  address: '',
-  phone: '',
-  role: 'admin'
-};
-
-// ensure admin exists once in localStorage
-(function ensureAdminSeed(){
-  const list = JSON.parse(localStorage.getItem('users') || '[]');
-  if (!list.some(u => u.email.toLowerCase() === ADMIN_USER.email.toLowerCase())) {
-    list.push(ADMIN_USER);
-    localStorage.setItem('users', JSON.stringify(list));
-  }
-})();
-
-// register form state
+// register form
 const register = ref({
   firstName: '',
   lastName: '',
@@ -178,44 +164,57 @@ const register = ref({
   phone: '',
   role: 'member',
 })
-
 const registerError = ref('')
 
-// common errors
+// admin seed (kept for dev convenience)
+const ADMIN_USER = {
+  id: 'admin',
+  firstName: 'Admin',
+  lastName: 'User',
+  email: 'admin@claytonpool.local',
+  password: 'Admin#123',
+  address: '',
+  phone: '',
+  role: 'admin'
+}
+
+// ensure admin exists once in localStorage
+;(function ensureAdminSeed(){
+  const list = JSON.parse(localStorage.getItem('users') || '[]');
+  if (!list.some(u => u.email?.toLowerCase() === ADMIN_USER.email.toLowerCase())) {
+    list.push(ADMIN_USER);
+    localStorage.setItem('users', JSON.stringify(list));
+  }
+})()
+
+/* -------------------- validators -------------------- */
 const errors = ref({
   userName: null,
   password: null,
   email: null,
   confirmPassword: null,
+  loginEmail: null,
 })
 
-/* -------------------- validators -------------------- */
-// name (first name) ≥ 3 chars
 const validateName = (blur) => {
   const name = register.value.firstName?.trim() || ''
-  if (name.length < 3) {
-    if (blur) errors.value.userName = 'Name must be at least 3 characters'
-  } else {
-    errors.value.userName = null
-  }
+  if (name.length < 3) { if (blur) errors.value.userName = 'Name must be at least 3 characters' }
+  else { errors.value.userName = null }
 }
-
-// password: upper, lower, number, special
 const validatePassword = (blur) => {
   const p = register.value.password || ''
   const minLen = 8
   const hasUpper = /[A-Z]/.test(p)
   const hasLower = /[a-z]/.test(p)
   const hasNum   = /\d/.test(p)
-  const hasSpec  = /[!@#$%^&*()\-_=+[\]{};:'",.<>/?\\|`~]/.test(p)
+  const hasSpec  = /[!@#$%^&*()\-_=+\[\]{};:'",.<>/?\\|`~]/.test(p)
   if (p.length < minLen) { if (blur) errors.value.password = `Password must be at least ${minLen} characters.` }
-  else if (!hasUpper)    { if (blur) errors.value.password = 'Include at least one uppercase letter.' }
-  else if (!hasLower)    { if (blur) errors.value.password = 'Include at least one lowercase letter.' }
-  else if (!hasNum)      { if (blur) errors.value.password = 'Include at least one number.' }
-  else if (!hasSpec)     { if (blur) errors.value.password = 'Include at least one special character.' }
+  else if (!hasUpper) { if (blur) errors.value.password = 'Include at least one uppercase letter.' }
+  else if (!hasLower) { if (blur) errors.value.password = 'Include at least one lowercase letter.' }
+  else if (!hasNum) { if (blur) errors.value.password = 'Include at least one number.' }
+  else if (!hasSpec) { if (blur) errors.value.password = 'Include at least one special character.' }
   else { errors.value.password = null }
 }
-
 const validateEmail = (blur) => {
   const email = register.value.email?.trim() || ''
   const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
@@ -223,7 +222,6 @@ const validateEmail = (blur) => {
   else if (!pattern.test(email)) { if (blur) errors.value.email = 'Please enter a valid email address.' }
   else { errors.value.email = null }
 }
-
 const validateConfirmPassword = (blur) => {
   const pwd = register.value.password || ''
   const confirm = register.value.confirmPassword || ''
@@ -231,13 +229,10 @@ const validateConfirmPassword = (blur) => {
   else if (pwd !== confirm) { if (blur) errors.value.confirmPassword = 'Passwords do not match.' }
   else { errors.value.confirmPassword = null }
 }
-
 const isPasswordsMatch = computed(() =>
   register.value.confirmPassword === '' ||
   register.value.password === register.value.confirmPassword
 )
-
-// login email validator
 const validateLoginEmail = (blur) => {
   const email = login.value.email?.trim() || ''
   const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
@@ -246,12 +241,10 @@ const validateLoginEmail = (blur) => {
   else { errors.value.loginEmail = null }
 }
 
-/* -------------------- cookie utils -------------------- */
-function setCookie(name, value, maxAgeSeconds = 60 * 60 * 24 * 7) { // 7 days
+/* -------------------- cookie + storage helpers -------------------- */
+function setCookie(name, value, maxAgeSeconds = 60 * 60 * 24 * 7) {
   document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; path=/; max-age=${maxAgeSeconds}; samesite=lax`
 }
-
-/* -------------------- storage helpers -------------------- */
 function getUsers() {
   return JSON.parse(localStorage.getItem('users') || '[]')
 }
@@ -260,103 +253,151 @@ function saveUsers(users) {
 }
 function setSessionUser(user) {
   localStorage.setItem('sessionUser', JSON.stringify(user))
-  setCookie('sessionUser', user.email)            // identifies who is logged in (demo)
-  setCookie('loginSuccess', 'true')               // requirement: login success token
+  setCookie('sessionUser', user.email)
+  setCookie('loginSuccess', 'true')
 }
 
-/* -------------------- submit handlers -------------------- */
-function submitLogin() {
-  loginError.value = '';
-  validateLoginEmail(true);
-  if (errors.value.loginEmail) return;
+/* -------------------- submit: LOGIN (Firebase + local session) -------------------- */
+async function submitLogin() {
+  loginError.value = ''
+  validateLoginEmail(true)
+  if (errors.value.loginEmail) return
 
-  // 1) Hard-coded admin short-circuit
+  // dev admin bypass (still allowed)
   if (
     login.value.email.toLowerCase() === ADMIN_USER.email.toLowerCase() &&
     login.value.password === ADMIN_USER.password
   ) {
-    setSessionUser(ADMIN_USER);                           // sets cookies + session
-    window.dispatchEvent(new StorageEvent('storage', { key: 'sessionUser' }));
-    router.push('/');                                     // go home
-    return;
+    setSessionUser(ADMIN_USER)
+    window.dispatchEvent(new StorageEvent('storage', { key: 'sessionUser' }))
+    router.push('/')
+    return
   }
 
-  // 2) Normal member login
-  const users = getUsers();
-  const found = users.find(u => u.email.toLowerCase() === login.value.email.toLowerCase());
+  try {
+    busy.value = true
+    await setPersistence(auth, browserLocalPersistence) // Firebase persistence
+    const cred = await signInWithEmailAndPassword(auth, login.value.email, login.value.password)
 
-  if (!found) { loginError.value = 'Account does not exist — please register.'; return; }
-  if (found.password !== login.value.password) { loginError.value = 'Invalid email or password.'; return; }
-
-  // If someone manually edited storage, force admin role on admin email
-  if (found.email.toLowerCase() === ADMIN_USER.email.toLowerCase()) found.role = 'admin';
-
-  setSessionUser(found);
-  window.dispatchEvent(new StorageEvent('storage', { key: 'sessionUser' }));
-  router.push('/');
-}
-
-function submitRegister() {
-  registerError.value = ''
-  // validate required register fields
-  validateName(true)
-  validateEmail(true)
-  validatePassword(true)
-  validateConfirmPassword(true)
-
-  if (errors.value.userName || 
-      errors.value.email || 
-      errors.value.password || 
-      errors.value.confirmPassword || 
-      !isPasswordsMatch.value) return
-
-    if (register.value.email.toLowerCase() === ADMIN_USER.email.toLowerCase()) {
-    registerError.value = 'This email is reserved for the administrator.';
-    return;
+    // Ensure a local profile exists (create minimal if missing)
+    const users = getUsers()
+    let profile = users.find(u => u.email.toLowerCase() === cred.user.email.toLowerCase())
+    if (!profile) {
+      profile = {
+        id: cred.user.uid,
+        firstName: cred.user.displayName?.split(' ')?.[0] || '',
+        lastName: cred.user.displayName?.split(' ')?.slice(1).join(' ') || '',
+        email: cred.user.email,
+        password: '', // do NOT store firebase password; left blank in local profile
+        address: '',
+        phone: '',
+        role: (cred.user.email.toLowerCase() === ADMIN_USER.email.toLowerCase()) ? 'admin' : 'member'
+      }
+      users.push(profile)
+      saveUsers(users)
+    } else {
+      // ensure admin role if email matches admin
+      if (profile.email.toLowerCase() === ADMIN_USER.email.toLowerCase()) profile.role = 'admin'
     }
 
-
-  const users = getUsers();
-  if (users.find(u => u.email === register.value.email)) {
-    registerError.value = 'Email is already registered.'
-    return;
+    setSessionUser(profile)
+    window.dispatchEvent(new StorageEvent('storage', { key: 'sessionUser' }))
+    router.push('/')
+  } catch (e) {
+    // Friendly Firebase error messages
+    const map = {
+      'auth/invalid-email': 'Invalid email address.',
+      'auth/user-not-found': 'Account does not exist — please register.',
+      'auth/wrong-password': 'Invalid email or password.',
+      'auth/too-many-requests': 'Too many attempts. Please try again later.'
+    }
+    loginError.value = map[e.code] || 'Login failed. Please try again.'
+  } finally {
+    busy.value = false
   }
-
-  const newUser = {
-    id: crypto.randomUUID?.() || String(Date.now()),
-    firstName: register.value.firstName,
-    lastName: register.value.lastName,
-    email: register.value.email,
-    password: register.value.password, // demo only — don’t store plaintext in real apps
-    address: register.value.address || '',
-    phone: register.value.phone || '',
-    role: register.value.role || 'member'
-  }
-
-  console.log('User Created')
-
-  users.push(newUser)
-
-    console.log('User Added to list')
-
-  saveUsers(users)
-    console.log('User Saved to db')
-
-  setSessionUser(newUser) // logs in immediately + sets loginSuccess cookie
-  registerError.value = ''
-  isLogin.value = true    // optional: flip back to login UI
-
-  window.dispatchEvent(new StorageEvent('storage', { key: 'sessionUser' }))
-  router.push('/')
-
 }
+
+/* -------------------- submit: REGISTER (Firebase + local profile + session) -------------------- */
+async function submitRegister() {
+  registerError.value = ''
+  validateName(true); validateEmail(true); validatePassword(true); validateConfirmPassword(true)
+  if (errors.value.userName || errors.value.email || errors.value.password || errors.value.confirmPassword || !isPasswordsMatch.value) return
+
+  // prevent using reserved admin email
+  if (register.value.email.toLowerCase() === ADMIN_USER.email.toLowerCase()) {
+    registerError.value = 'This email is reserved for the administrator.'
+    return
+  }
+
+  try {
+    busy.value = true
+    await setPersistence(auth, browserLocalPersistence)
+    const cred = await createUserWithEmailAndPassword(auth, register.value.email, register.value.password)
+
+    // Optional: set displayName in Firebase
+    const displayName = `${register.value.firstName} ${register.value.lastName}`.trim()
+    if (displayName) { try { await updateProfile(cred.user, { displayName }) } catch {} }
+
+    // also persist a local profile with the extra fields your app uses
+    const users = getUsers()
+    const newUser = {
+      id: cred.user.uid,
+      firstName: register.value.firstName,
+      lastName: register.value.lastName,
+      email: cred.user.email,
+      password: '', // never store Firebase password locally
+      address: register.value.address || '',
+      phone: register.value.phone || '',
+      role: register.value.role || 'member'
+    }
+    users.push(newUser)
+    saveUsers(users)
+
+    setSessionUser(newUser) // immediate login
+    isLogin.value = true
+    window.dispatchEvent(new StorageEvent('storage', { key: 'sessionUser' }))
+    router.push('/')
+  } catch (e) {
+    const map = {
+      'auth/email-already-in-use': 'Email is already registered.',
+      'auth/invalid-email': 'Invalid email address.',
+      'auth/weak-password': 'Password is too weak.',
+      'auth/operation-not-allowed': 'Registration temporarily disabled.'
+    }
+    registerError.value = map[e.code] || 'Registration failed. Please try again.'
+  } finally {
+    busy.value = false
+  }
+}
+
+/* -------------------- keep UI in sync with Firebase session -------------------- */
+onMounted(() => {
+  onAuthStateChanged(auth, (user) => {
+    if (!user) return
+    // if a Firebase session exists but local session is missing (e.g., refresh), reconstruct it
+    const users = getUsers()
+    let profile = users.find(u => u.email?.toLowerCase() === user.email?.toLowerCase())
+    if (!profile) {
+      profile = {
+        id: user.uid,
+        firstName: user.displayName?.split(' ')?.[0] || '',
+        lastName: user.displayName?.split(' ')?.slice(1).join(' ') || '',
+        email: user.email,
+        password: '',
+        address: '',
+        phone: '',
+        role: (user.email?.toLowerCase() === ADMIN_USER.email.toLowerCase()) ? 'admin' : 'member'
+      }
+      users.push(profile); saveUsers(users)
+    }
+    setSessionUser(profile)
+  })
+})
 
 /* -------------------- UI helpers -------------------- */
 function toggleMode() {
   isLogin.value = !isLogin.value
-  // clear any error flashes when switching
   loginError.value = ''
   registerError.value = ''
 }
 </script>
-
