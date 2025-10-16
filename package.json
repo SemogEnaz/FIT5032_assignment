@@ -1,7 +1,18 @@
 {
   "dependencies": {
     "@popperjs/core": "^2.11.8",
+    "axios": "^1.12.2",
     "bootstrap": "^5.3.8",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "firebase-admin": "^13.5.0",
+    "firebase-functions": "^6.5.0",
     "vue-router": "^4.5.1"
-  }
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "start": "node server.js"
+  },
+  "type": "module"
 }
