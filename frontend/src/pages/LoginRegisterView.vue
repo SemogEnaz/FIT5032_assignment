@@ -207,7 +207,7 @@ const validatePassword = (blur) => {
   const hasUpper = /[A-Z]/.test(p)
   const hasLower = /[a-z]/.test(p)
   const hasNum   = /\d/.test(p)
-  const hasSpec  = /[!@#$%^&*()\-_=+\[\]{};:'",.<>/?\\|`~]/.test(p)
+  const hasSpec  = /[!@#$%^&*()\-_=+[\]{};:'",.<>/?\\|`~]/.test(p)
   if (p.length < minLen) { if (blur) errors.value.password = `Password must be at least ${minLen} characters.` }
   else if (!hasUpper) { if (blur) errors.value.password = 'Include at least one uppercase letter.' }
   else if (!hasLower) { if (blur) errors.value.password = 'Include at least one lowercase letter.' }
@@ -336,7 +336,7 @@ async function submitRegister() {
 
     // Optional: set displayName in Firebase
     const displayName = `${register.value.firstName} ${register.value.lastName}`.trim()
-    if (displayName) { try { await updateProfile(cred.user, { displayName }) } catch {} }
+    if (displayName) { try { await updateProfile(cred.user, { displayName }) } catch { /* empty */ } }
 
     // also persist a local profile with the extra fields your app uses
     const users = getUsers()

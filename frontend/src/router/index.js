@@ -5,8 +5,6 @@ import EventView from '@/pages/EventView.vue';
 import BlogView from '@/pages/BlogView.vue';
 import Newsletters from '@/pages/Newsletters.vue';
 import LoginRegisterView from '@/pages/LoginRegisterView.vue';
-import AddBookView from '@/pages/AddBookView.vue';
-import GetBookCountView from '@/pages/GetBookCountView.vue';
 import WeatherView from '@/pages/WeatherView.vue';
 
 const routes = [
