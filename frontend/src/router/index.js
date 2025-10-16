@@ -1,4 +1,4 @@
-import { createMemoryHistory, createRouter } from 'vue-router'
+import { createWebHistory, createRouter } from 'vue-router'
 
 import HomePageView from '@/pages/HomePageView.vue';
 import EventView from '@/pages/EventView.vue';
@@ -13,9 +13,9 @@ import AdminDashView from '@/pages/Dashboards/AdminDashView.vue';
 import AdminEmail from '@/pages/Dashboards/AdminActionsView.vue/AdminEmail.vue';
 import AdminBlog from '@/pages/Dashboards/AdminActionsView.vue/AdminBlog.vue';
 import AdminEvents from '@/pages/Dashboards/AdminActionsView.vue/AdminEvents.vue';
+import GetEventAPI from '@/pages/API/GetEventAPI.vue';
 
 const routes = [
-    { path: '/', name: "homePage", component: HomePageView },
     { path: '/events', name: "events", component: EventView},
     { path: '/blog', name: "blog", component: BlogView},
     { path: '/newsletters', name: "newsletters", component: Newsletters},
@@ -28,10 +28,12 @@ const routes = [
     { path: '/admin/blog', name: 'AdminBlog', component: AdminBlog },
     { path: '/admin/email', name: 'AdminEmail', component: AdminEmail },
     { path: '/UserDashboard', name: 'UserDashboard', component: UserDashView },
+    { path: '/GetEventAPI', name: 'GetEventAPI', component: GetEventAPI },
+    { path: '/', name: "homePage", component: HomePageView },
 ]
 
 const router = createRouter({
-  history: createMemoryHistory(),
+  history: createWebHistory(),
   routes,
   linkActiveClass: 'active',
   linkExactActiveClass: 'active',
