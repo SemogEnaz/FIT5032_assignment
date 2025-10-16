@@ -1,6 +1,9 @@
 <template>
   <div class="d-flex flex-column align-items-center">
-    <h1 class="mt-3">Clayton Pool Assocation</h1>
+    
+    <template v-if="showHeader">
+
+      <h1 class="mt-3">Clayton Pool Assocation</h1>
 
     <nav class="mt-3 w-100">
       <ul class="nav nav-pills nav-justified px-3">
@@ -17,6 +20,14 @@
           <RouterLink class="nav-link" to="/newsletters">Newsletters</RouterLink>
         </li>
 
+        <li class="nav-item">
+          <RouterLink class="nav-link" to="/admin">AdminDashboard</RouterLink>
+        </li>
+
+        <li class="nav-item">
+          <RouterLink class="nav-link" to="/UserDashboard">UserDashboard</RouterLink>
+        </li>
+
         <!-- AUTH SLOT -->
         <li class="nav-item" @click="logout" v-if="isLoggedIn">
             Logout
@@ -27,15 +38,21 @@
       </ul>
     </nav>
 
+    </template>
+    
     <RouterView class="mt-4" />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
+const route = useRoute();
+
+const showHeader = computed(() => route.name !== 'GetEventAPI' && route.name !== 'GetSummaryAPI')
+console.log('route.name:', route.name, 'route.path:', route.path)
 
 /* ---------- cookie helpers ---------- */
 function getCookie(name) {
