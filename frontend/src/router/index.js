@@ -14,6 +14,7 @@ import AdminEmail from '@/pages/Dashboards/AdminActionsView.vue/AdminEmail.vue';
 import AdminBlog from '@/pages/Dashboards/AdminActionsView.vue/AdminBlog.vue';
 import AdminEvents from '@/pages/Dashboards/AdminActionsView.vue/AdminEvents.vue';
 import GetEventAPI from '@/pages/API/GetEventAPI.vue';
+import GetNewsletterSummaryAPI from '@/pages/API/GetNewsletterSummaryAPI.vue';
 
 const routes = [
     { path: '/events', name: "events", component: EventView},
@@ -29,6 +30,7 @@ const routes = [
     { path: '/admin/email', name: 'AdminEmail', component: AdminEmail },
     { path: '/UserDashboard', name: 'UserDashboard', component: UserDashView },
     { path: '/GetEventAPI', name: 'GetEventAPI', component: GetEventAPI },
+    { path: '/GetSummaryAPI', name: 'GetSummaryAPI', component: GetNewsletterSummaryAPI },
     { path: '/', name: "homePage", component: HomePageView },
 ]
 
