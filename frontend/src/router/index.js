@@ -5,11 +5,14 @@ import EventView from '@/pages/EventView.vue';
 import BlogView from '@/pages/BlogView.vue';
 import Newsletters from '@/pages/Newsletters.vue';
 import LoginRegisterView from '@/pages/LoginRegisterView.vue';
-import FirebaseSigninView from '@/pages/FirebaseSigninView.vue';
-import FirebaseRegister from '@/pages/FirebaseRegister.vue';
+import FirebaseSigninView from '@/pages/ExternalAuth/FirebaseSigninView.vue';
+import FirebaseRegister from '@/pages/ExternalAuth/FirebaseRegister.vue';
 import AddBookView from '@/pages/AddBookView.vue';
-import GetBookCountView from '@/pages/GetBookCountView.vue';
-import WeatherView from '@/pages/WeatherView.vue';
+import UserDashView from '@/pages/Dashboards/UserDashView.vue';
+import AdminDashView from '@/pages/Dashboards/AdminDashView.vue';
+import AdminEmail from '@/pages/Dashboards/AdminActionsView.vue/AdminEmail.vue';
+import AdminBlog from '@/pages/Dashboards/AdminActionsView.vue/AdminBlog.vue';
+import AdminEvents from '@/pages/Dashboards/AdminActionsView.vue/AdminEvents.vue';
 
 const routes = [
     { path: '/', name: "homePage", component: HomePageView },
@@ -20,8 +23,11 @@ const routes = [
     { path: '/FireLogin', name: 'FireLogin', component: FirebaseSigninView },
     { path: '/FireRegister', name: 'FireRegister', component: FirebaseRegister },
     { path: '/addBook', name: 'AddBook', component: AddBookView },
-    { path: '/getBook', name: 'GetBook', component: GetBookCountView },
-    { path: '/WeatherCheck', name: 'WeatherCheck', component: WeatherView },
+    { path: '/admin', name: 'AdminHome', component: AdminDashView },
+    { path: '/admin/events', name: 'AdminEvents', component: AdminEvents },
+    { path: '/admin/blog', name: 'AdminBlog', component: AdminBlog },
+    { path: '/admin/email', name: 'AdminEmail', component: AdminEmail },
+    { path: '/UserDashboard', name: 'UserDashboard', component: UserDashView },
 ]
 
 const router = createRouter({

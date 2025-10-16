@@ -30,11 +30,11 @@
         </li>
 
         <li class="nav-item">
-          <RouterLink class="nav-link" to="/addBook">AddBook</RouterLink>
+          <RouterLink class="nav-link" to="/admin">AdminDashboard</RouterLink>
         </li>
 
         <li class="nav-item">
-          <RouterLink class="nav-link" to="/getBook">GetBook</RouterLink>
+          <RouterLink class="nav-link" to="/UserDashboard">UserDashboard</RouterLink>
         </li>
 
         <!-- AUTH SLOT -->
