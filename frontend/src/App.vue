@@ -26,6 +26,10 @@
         </li>
 
         <li class="nav-item">
+          <RouterLink class="nav-link" to="/WeatherCheck">WeatherView</RouterLink>
+        </li>
+
+        <li class="nav-item">
           <RouterLink class="nav-link" to="/addBook">AddBook</RouterLink>
         </li>
 
