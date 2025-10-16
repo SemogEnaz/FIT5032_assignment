@@ -6,4 +6,6 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
 import router from './router';
 
+import './firebase/init.js';
+
 createApp(App).use(router).mount('#app')
