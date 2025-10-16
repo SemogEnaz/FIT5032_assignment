@@ -1,28 +1,12 @@
 <template>
-  <main class="py-4">
-    <section class="container text-center mb-3">
-      <h1 class="mb-2">Events (Mock API)</h1>
-      <p class="text-muted mb-3">Fetching event list from API…</p>
-    </section>
-
-    <section class="container">
-      <div v-if="error" class="alert alert-danger">
-        Error fetching events: {{ error.message }}
-      </div>
-
-      <div v-else-if="!jsondata" class="text-secondary">Loading events...</div>
-
-      <pre v-else class="bg-light p-3 rounded">
-        {{ jsondata }}
-      </pre>
-    </section>
-  </main>
+  <pre>{{ jsondata }}</pre>
 </template>
 
 <script>
-import axios from 'axios';
+import axios from 'axios'; // kept for consistency with your CountBookAPI example
 
 export default {
+  name: 'GetEventAPI',
   data() {
     return {
       jsondata: null,
@@ -30,31 +14,35 @@ export default {
     };
   },
   mounted() {
-    this.getEventsAPI();
+    this.getEventAPI();
   },
   methods: {
-    async getEventsAPI() {
+    async getEventAPI() {
       try {
-        // Mock endpoint for example — replace with your real one later
-        const response = await axios.get('');
-        // Assume response looks like: { events: [{ name: "Club Open Night" }, ...] }
-        this.jsondata = response.data.events || [];
+        // For now, mock Firestore data
+        const mockEvents = [
+          { id: 1, name: "Club Open Night", date: "2025-10-21" },
+          { id: 2, name: "Coaching Clinic", date: "2025-10-25" },
+          { id: 3, name: "Friday Social", date: "2025-11-01" },
+        ];
+
+        // Placeholder API endpoint — replace with your real Cloud Function/Run URL
+        let response = await axios.get('', {
+        });
+
+        // Simulate API/Firestore lookup
+        // (You can later replace this with an axios call to your Firebase Cloud Function)
+        response = { data: { events: mockEvents } };
+
+        // Return JSON like a backend would
+        this.jsondata = response.data.events;
         this.error = null;
       } catch (error) {
         console.error('Error fetching events:', error);
         this.error = error;
-        this.jsondata = null;
+        this.jsondata = { error: 'Failed to fetch events.' };
       }
     },
   },
 };
 </script>
-
-<style scoped>
-.container { width: min(1100px, 92%); margin: 0 auto; }
-pre {
-  text-align: left;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-</style>
