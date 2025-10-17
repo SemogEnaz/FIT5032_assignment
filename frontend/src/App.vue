@@ -36,6 +36,10 @@
         <li class="nav-item">
           <RouterLink class="nav-link" to="/getBook">GetBook</RouterLink>
         </li>
+        
+        <li class="nav-item">
+          <RouterLink class="nav-link" to="/CreateBook">CreateBook</RouterLink>
+        </li>
 
         <!-- AUTH SLOT -->
         <li class="nav-item" @click="logout" v-if="isLoggedIn">

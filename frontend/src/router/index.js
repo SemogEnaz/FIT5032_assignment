@@ -10,6 +10,7 @@ import FirebaseRegister from '@/pages/FirebaseRegister.vue';
 import AddBookView from '@/pages/AddBookView.vue';
 import GetBookCountView from '@/pages/GetBookCountView.vue';
 import WeatherView from '@/pages/WeatherView.vue';
+import CreateBookView from '@/pages/CreateBookView.vue';
 
 const routes = [
     { path: '/', name: "homePage", component: HomePageView },
@@ -22,6 +23,7 @@ const routes = [
     { path: '/addBook', name: 'AddBook', component: AddBookView },
     { path: '/getBook', name: 'GetBook', component: GetBookCountView },
     { path: '/WeatherCheck', name: 'WeatherCheck', component: WeatherView },
+    { path: '/CreateBook', name: 'CreateBook', component: CreateBookView },
 ]
 
 const router = createRouter({
