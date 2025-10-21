@@ -12,11 +12,24 @@
 
     <section class="section">
       <div class="container">
-        <div class="card" style="grid-template-columns:1fr;">
-          <form @submit.prevent="createEvent" class="d-grid gap-2">
-            <input v-model.trim="f.summary" class="form-control" placeholder="Title / Summary" required />
-            <input v-model.trim="f.location" class="form-control" placeholder="Location (optional)" />
-            <textarea v-model.trim="f.description" class="form-control" rows="3" placeholder="Description (optional)"></textarea>
+        <div class="card d-flex">
+          <form @submit.prevent="saveEvent" class="d-flex flex-column gap-2">
+
+            <!--Title-->
+            <input v-model.trim="f.title" class="form-control" placeholder="Event title" required />
+            <!--Summary-->
+            <textarea v-model.trim="f.summary" class="form-control" rows="3" placeholder="Summary / description"></textarea>
+            <!--Image-->
+            <input v-model.trim="f.image" class="form-control" placeholder="Image URL (optional)" />
+            <!--Address-->
+            <div class="d-flex flex-column">
+              <label class="form-label small">Address</label>
+              <div class="d-flex flex-column flex-sm-row gap-1">
+                <input v-model.trim="f.street" class="form-control" placeholder="Street Address" required />
+                <input v-model.trim="f.suburb" class="form-control" placeholder="Suburb" required />
+                <input v-model.trim="f.state" class="form-control" placeholder="State" required />
+              </div>
+            </div>
 
             <div class="row g-2">
               <div class="col-md-6">
@@ -29,12 +42,9 @@
               </div>
             </div>
 
-            <label class="form-label small mb-0">Invitees (comma-separated emails)</label>
-            <input v-model.trim="f.attendeesCsv" class="form-control" placeholder="alice@ex.com, bob@ex.com" />
-
             <div class="d-flex gap-2 flex-wrap mt-2">
               <button class="btn btn-dark" type="submit">Create</button>
-              <button class="btn btn-outline-dark" type="button" @click="reset()">Clear</button>
+              <button class="btn btn-outline-dark" type="button" @click="reset">Clear</button>
             </div>
           </form>
         </div>
@@ -51,41 +61,65 @@
 <script setup>
 import { computed, reactive } from 'vue'
 
-const calendarId = 'clayton-pool-association@calendar.example'
-
 const f = reactive({
+  title: '',
   summary: '',
-  description: '',
   location: '',
-  start: '', // 'YYYY-MM-DDTHH:mm'
+  start: '',
   end: '',
-  attendeesCsv: ''
+  image: '',
+  street: '',
+  suburb: '',
+  state: '',
+  lat: null,
+  lng: null,
 })
 
-const preview = computed(() => {
-  const attendees = (f.attendeesCsv || '')
-    .split(',')
-    .map(s => s.trim())
-    .filter(Boolean)
-    .map(email => ({ email }))
-  return {
-    calendarId,
-    summary: f.summary,
-    description: f.description || undefined,
-    location: f.location || undefined,
-    start: { dateTime: f.start ? new Date(f.start).toISOString() : undefined },
-    end:   { dateTime: f.end   ? new Date(f.end).toISOString()   : undefined },
-    attendees
+const preview = computed(() => ({
+  title: f.title,
+  summary: f.summary,
+  start: f.start ? new Date(f.start).toISOString() : '',
+  end: f.end ? new Date(f.end).toISOString() : '',
+  street: f.street,
+  suburb: f.suburb,
+  state: f.state,
+  image: f.image,
+}))
+
+async function saveEvent() {
+  try {
+    const payload = {
+      title: f.title,
+      summary: f.summary,
+      start: new Date(f.start).toISOString(),
+      end: new Date(f.end).toISOString(),
+      street: f.street,
+      suburb: f.suburb,
+      state: f.state,
+      image: f.image,
+    }
+
+    console.log(payload);
+
+    const res = await fetch('https://createevent-5bgqwovi2q-uc.a.run.app', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.message || 'Failed to create event')
+    alert('✅ Event created successfully!')
+    console.log('Created event:', data)
+    reset()
+  } catch (e) {
+    console.error('❌ Error creating event:', e)
+    alert(`Failed: ${e.message}`)
   }
-})
-
-function createEvent() {
-  alert('Mock create:\n' + JSON.stringify(preview.value, null, 2))
-  reset()
 }
+
 function reset() {
-  f.summary = f.description = f.location = f.attendeesCsv = ''
-  f.start = f.end = ''
+  Object.keys(f).forEach(k => f[k] = (typeof f[k] === 'number' ? null : ''))
 }
 </script>
 

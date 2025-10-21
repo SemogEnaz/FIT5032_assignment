@@ -5,21 +5,6 @@ const cors = require("cors")({origin: true});
 setGlobalOptions({maxInstances: 10});
 admin.initializeApp();
 
-exports.countBooks = onRequest((req, res) => {
-  cors(req, res, async () => {
-    try {
-      const booksCollection = admin.firestore().collection("books");
-      const snapshot = await booksCollection.get();
-      const count = snapshot.size;
-
-      res.status(200).send({count});
-    } catch (error) {
-      console.error("Error counting books:", error.message);
-      res.status(500).send("Error counting books");
-    }
-  });
-});
-
 exports.createUser = onRequest((req, res) => {
   cors(req, res, async () => {
     try {
@@ -87,6 +72,59 @@ exports.getUserProfile = onRequest((req, res) => {
     } catch (error) {
       console.error('Error fetching user profile:', error);
       res.status(500).send({ success: false, message: error.message });
+    }
+  });
+});
+
+exports.createEvent = onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      // ✅ Only allow POST requests
+      if (req.method !== "POST") {
+        return res.status(405).send("Method Not Allowed");
+      }
+
+      const {
+        title,
+        summary,
+        start,
+        street, suburb, state,
+        image,
+      } = req.body;
+
+      // ✅ Validate required fields
+      if (!title || !summary || !start || !street || !suburb || !state) {
+        return res.status(400).send("Missing required fields: title, summary, start, location");
+      }
+
+      // ✅ Validate image URL (basic)
+      if (image && !/^https?:\/\/.+/.test(image)) {
+        return res.status(400).send("Invalid image URL");
+      }
+
+      const eventData = {
+        title,
+        summary,
+        start,
+        street, suburb, state,
+        image: image || "",
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      };
+
+      // ✅ Save to Firestore
+      const ref = await admin.firestore().collection("events").add(eventData);
+
+      res.status(200).send({
+        success: true,
+        id: ref.id,
+        message: "Event created successfully.",
+      });
+    } catch (error) {
+      console.error("🔥 Error creating event:", error);
+      res.status(500).send({
+        success: false,
+        message: "Error creating event: " + error.message,
+      });
     }
   });
 });
