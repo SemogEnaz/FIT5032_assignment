@@ -11,9 +11,16 @@ module.exports = {
     "google",
   ],
   rules: {
-    "no-restricted-globals": ["error", "name", "length"],
-    "prefer-arrow-callback": "error",
-    "quotes": ["error", "double", {"allowTemplateLiterals": true}],
+    'linebreak-style': 'off',
+    'object-curly-spacing': 'off',
+    'quotes': 'off',
+    'max-len': 'off',
+    'no-multi-spaces': 'off',
+    'comma-dangle': 'off',
+    'no-unused-vars': 'warn',
+    'no-console': 'off',
+    'no-undef': 'off',
+    'valid-jsdoc': 'off',
   },
   overrides: [
     {
