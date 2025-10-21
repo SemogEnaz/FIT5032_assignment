@@ -57,33 +57,36 @@ exports.createUser = onRequest((req, res) => {
   });
 });
 
-exports.checkEmailExists = onRequest((req, res) => {
+exports.getUserProfile = onRequest((req, res) => {
   cors(req, res, async () => {
     try {
-      // Only allow GET or POST requests
-      if (req.method !== 'POST' && req.method !== 'GET') {
+      // Only allow POST for security
+      if (req.method !== 'POST') {
         return res.status(405).send('Method Not Allowed');
       }
 
-      // Accept email either from body (POST) or query (GET)
-      const email = req.method === 'POST' ? req.body.email : req.query.email;
-
-      if (!email) {
-        return res.status(400).send('Missing required field: email');
+      const { uid } = req.body;
+      if (!uid) {
+        return res.status(400).send('Missing user UID');
       }
 
-      const usersRef = admin.firestore().collection('users');
-      const snapshot = await usersRef.where('email', '==', email).get();
+      // Retrieve user document from Firestore
+      const userRef = admin.firestore().collection('users').doc(uid);
+      const snap = await userRef.get();
 
-      if (snapshot.empty) {
-        return res.status(200).send({ exists: false });
+      if (!snap.exists) {
+        return res.status(404).send('User not found');
       }
 
-      // Email exists
-      res.status(200).send({ exists: true });
+      const data = snap.data();
+
+      // Optionally sanitize what you return (never send sensitive fields)
+      delete data.password;
+
+      res.status(200).send({ success: true, user: data });
     } catch (error) {
-      console.error('Error checking email:', error.message);
-      res.status(500).send('Error checking email in Firestore');
+      console.error('Error fetching user profile:', error);
+      res.status(500).send({ success: false, message: error.message });
     }
   });
 });

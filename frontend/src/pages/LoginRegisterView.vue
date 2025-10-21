@@ -220,21 +220,6 @@ const validatePassword = (blur) => {
 const validateEmail = async (blur) => {
   const email = register.value.email?.trim() || ''
   const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-
-  // // Check firestore for existing user
-  // const response = await fetch('https://<your-region>-<your-project-id>.cloudfunctions.net/checkEmailExists', {
-  //   method: 'POST',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify({ email: register.value.email }),
-  // });
-
-  // const data = await response.json();
-
-  // if (data.exists) {
-  //   errors.value.email = 'This email is already in use.';
-  //   return;
-  // }
-
   if (!email) { if (blur) errors.value.email = 'Email is required.' }
   else if (!pattern.test(email)) { if (blur) errors.value.email = 'Please enter a valid email address.' }
 
@@ -304,7 +289,6 @@ async function saveUsers(user) {
   }
 }
 
-  
 function setSessionUser(user) {
   localStorage.setItem('sessionUser', JSON.stringify(user))
   setCookie('sessionUser', user.email)
@@ -332,29 +316,25 @@ async function submitLogin() {
     busy.value = true
     await setPersistence(auth, browserLocalPersistence) // Firebase persistence
     const cred = await signInWithEmailAndPassword(auth, login.value.email, login.value.password)
+    const uid = cred.user.uid;
 
-    // Ensure a local profile exists (create minimal if missing)
-    const users = getUsers()
-    let profile = users.find(u => u.email.toLowerCase() === cred.user.email.toLowerCase())
-    if (!profile) {
-      profile = {
-        id: cred.user.uid,
-        firstName: cred.user.displayName?.split(' ')?.[0] || '',
-        lastName: cred.user.displayName?.split(' ')?.slice(1).join(' ') || '',
-        email: cred.user.email,
-        password: '', // do NOT store firebase password; left blank in local profile
-        address: '',
-        phone: '',
-        role: (cred.user.email.toLowerCase() === ADMIN_USER.email.toLowerCase()) ? 'admin' : 'member'
-      }
-      users.push(profile)
-      saveUsers(users)
+    // Call the Cloud Function
+    const res = await fetch('https://getuserprofile-5bgqwovi2q-uc.a.run.app', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uid }),
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      console.log('✅ User profile:', data.user);
+      setSessionUser(data.user);
+      router.push('/');
     } else {
-      // ensure admin role if email matches admin
-      if (profile.email.toLowerCase() === ADMIN_USER.email.toLowerCase()) profile.role = 'admin'
+      console.error('❌ Failed to load profile:', data.message || 'Unknown error');
     }
 
-    setSessionUser(profile)
     window.dispatchEvent(new StorageEvent('storage', { key: 'sessionUser' }))
     router.push('/')
   } catch (e) {
