@@ -141,6 +141,39 @@ exports.getBook = onRequest(async (req, res) => {
   });
 });
 
+// === Add this to functions/index.js ===
+
+// GET /getAllBooks
+// Optional query params: orderBy (field), direction ('asc'|'desc'), limit (number)
+exports.getAllBooks = onRequest(async (req, res) => {
+  if (req.method === 'OPTIONS') {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Methods', 'GET,OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+    return res.status(204).send('');
+  }
+
+  return cors(req, res, async () => {
+    try {
+      const { orderBy, direction = 'asc', limit } = req.query || {};
+      let q = admin.firestore().collection('books');
+
+      if (orderBy) q = q.orderBy(String(orderBy), direction === 'desc' ? 'desc' : 'asc');
+      if (limit) q = q.limit(Number(limit));
+
+      const snap = await q.get();
+      const books = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      // Pure JSON array
+      res.status(200).json(books);
+    } catch (err) {
+      console.error('getAllBooks error:', err);
+      res.status(500).json({ error: 'Failed to fetch books.' });
+    }
+  });
+});
+
+
 exports.countBooks = onRequest((req, res) => {
   cors(req, res, async () => {
     try {

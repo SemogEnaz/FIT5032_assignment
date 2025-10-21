@@ -20,6 +20,7 @@ module.exports = {
     'no-multi-spaces': 'off',
     'comma-dangle': 'off',
     'valid-jsdoc': 'off',
+    'arrow-parens': 'off',
   },
   overrides: [
     {
