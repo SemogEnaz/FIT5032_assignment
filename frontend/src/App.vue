@@ -41,6 +41,14 @@
           <RouterLink class="nav-link" to="/CreateBook">CreateBook</RouterLink>
         </li>
 
+        <li class="nav-item">
+          <RouterLink class="nav-link" to="/GetAllBookAPI">GetAllBookAPI</RouterLink>
+        </li>
+
+        <li class="nav-item">
+          <RouterLink class="nav-link" to="/GetCount">GetBookCount</RouterLink>
+        </li>
+
         <!-- AUTH SLOT -->
         <li class="nav-item" @click="logout" v-if="isLoggedIn">
             Logout

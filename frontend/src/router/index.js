@@ -11,6 +11,8 @@ import AddBookView from '@/pages/AddBookView.vue';
 import GetBookCountView from '@/pages/GetBookCountView.vue';
 import WeatherView from '@/pages/WeatherView.vue';
 import CreateBookView from '@/pages/CreateBookView.vue';
+import GetAllBookAPI from '@/pages/GetAllBookAPI.vue';
+import CountBookAPI from '@/pages/CountBookAPI.vue';
 
 const routes = [
     { path: '/', name: "homePage", component: HomePageView },
@@ -24,6 +26,9 @@ const routes = [
     { path: '/getBook', name: 'GetBook', component: GetBookCountView },
     { path: '/WeatherCheck', name: 'WeatherCheck', component: WeatherView },
     { path: '/CreateBook', name: 'CreateBook', component: CreateBookView },
+    { path: '/GetAllBookAPI', name: 'GetAllBookAPI', component: GetAllBookAPI },
+    { path: '/GetCount', name: 'GetCount', component: CountBookAPI },
+    
 ]
 
 const router = createRouter({
