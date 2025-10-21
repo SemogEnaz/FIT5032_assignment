@@ -1,5 +1,9 @@
 <template>
-  <DataTable :value="rows" tableStyle="min-width: 30rem">
+  <DataTable 
+    :value="rows"
+    paginator :rows="5" :rowsPerPageOptions="[5, 10]"
+    tableStyle="min-width: 30rem;">
+
     <Column field="id" header="ID" />
     <Column field="name" header="Name" />
     <Column field="role" header="Role" />
