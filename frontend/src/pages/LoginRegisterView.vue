@@ -1,5 +1,5 @@
 <template>
-  <main class="container py-4" style="max-width:760px;">
+  <main class="container py-4" style="max-width:500px;">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h1 class="h4 m-0">{{ isLogin ? 'Login' : 'Register' }}</h1>
       <button class="btn btn-outline-secondary btn-sm" @click="toggleMode">
@@ -215,11 +215,29 @@ const validatePassword = (blur) => {
   else if (!hasSpec) { if (blur) errors.value.password = 'Include at least one special character.' }
   else { errors.value.password = null }
 }
-const validateEmail = (blur) => {
+
+
+const validateEmail = async (blur) => {
   const email = register.value.email?.trim() || ''
-  const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+  const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+  // // Check firestore for existing user
+  // const response = await fetch('https://<your-region>-<your-project-id>.cloudfunctions.net/checkEmailExists', {
+  //   method: 'POST',
+  //   headers: { 'Content-Type': 'application/json' },
+  //   body: JSON.stringify({ email: register.value.email }),
+  // });
+
+  // const data = await response.json();
+
+  // if (data.exists) {
+  //   errors.value.email = 'This email is already in use.';
+  //   return;
+  // }
+
   if (!email) { if (blur) errors.value.email = 'Email is required.' }
   else if (!pattern.test(email)) { if (blur) errors.value.email = 'Please enter a valid email address.' }
+
   else { errors.value.email = null }
 }
 const validateConfirmPassword = (blur) => {
@@ -248,9 +266,45 @@ function setCookie(name, value, maxAgeSeconds = 60 * 60 * 24 * 7) {
 function getUsers() {
   return JSON.parse(localStorage.getItem('users') || '[]')
 }
-function saveUsers(users) {
-  localStorage.setItem('users', JSON.stringify(users))
+async function saveUsers(user) {
+  console.log("📦 Sending user:", user);
+
+  try {
+    const res = await fetch("https://createuser-5bgqwovi2q-uc.a.run.app", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        uid: user.uid,
+        firstName: register.value.firstName,
+        lastName: register.value.lastName,
+        email: user.email,
+        address: register.value.address,
+        phone: register.value.phone,
+        role: "member",
+      }),
+    });
+
+    // Print raw response
+    const text = await res.text();
+    console.log("🛰️ Response status:", res.status);
+    console.log("🛰️ Response body:", text);
+
+    if (!res.ok) {
+      throw new Error(`Backend returned ${res.status}: ${text}`);
+    }
+
+    try {
+      return JSON.parse(text); // if it's JSON
+    } catch {
+      return text; // fallback to plain text
+    }
+  } catch (e) {
+    console.error("❌ Error adding new registration to database:", e);
+    throw e;
+  }
 }
+
+  
 function setSessionUser(user) {
   localStorage.setItem('sessionUser', JSON.stringify(user))
   setCookie('sessionUser', user.email)
@@ -320,7 +374,7 @@ async function submitLogin() {
 /* -------------------- submit: REGISTER (Firebase + local profile + session) -------------------- */
 async function submitRegister() {
   registerError.value = ''
-  validateName(true); validateEmail(true); validatePassword(true); validateConfirmPassword(true)
+  validateName(true); await validateEmail(true); validatePassword(true); validateConfirmPassword(true)
   if (errors.value.userName || errors.value.email || errors.value.password || errors.value.confirmPassword || !isPasswordsMatch.value) return
 
   // prevent using reserved admin email
@@ -339,9 +393,8 @@ async function submitRegister() {
     if (displayName) { try { await updateProfile(cred.user, { displayName }) } catch { /* empty */ } }
 
     // also persist a local profile with the extra fields your app uses
-    const users = getUsers()
     const newUser = {
-      id: cred.user.uid,
+      uid: cred.user.uid,
       firstName: register.value.firstName,
       lastName: register.value.lastName,
       email: cred.user.email,
@@ -350,10 +403,11 @@ async function submitRegister() {
       phone: register.value.phone || '',
       role: register.value.role || 'member'
     }
-    users.push(newUser)
-    saveUsers(users)
+
+    await saveUsers(newUser);
 
     setSessionUser(newUser) // immediate login
+    
     isLogin.value = true
     window.dispatchEvent(new StorageEvent('storage', { key: 'sessionUser' }))
     router.push('/')

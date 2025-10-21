@@ -1,38 +1,8 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
-
 const {setGlobalOptions} = require("firebase-functions");
 const {onRequest} = require("firebase-functions/https");
 const admin = require("firebase-admin");
 const cors = require("cors")({origin: true});
-// const logger = require("firebase-functions/logger");
-
-// For cost control, you can set the maximum number of containers that can be
-// running at the same time. This helps mitigate the impact of unexpected
-// traffic spikes by instead downgrading performance. This limit is a
-// per-function limit. You can override the limit for each function using the
-// `maxInstances` option in the function's options, e.g.
-// `onRequest({ maxInstances: 5 }, (req, res) => { ... })`.
-// NOTE: setGlobalOptions does not apply to functions using the v1 API. V1
-// functions should each use functions.runWith({ maxInstances: 10 }) instead.
-// In the v1 API, each function can only serve one request per container, so
-// this will be the maximum concurrent request count.
 setGlobalOptions({maxInstances: 10});
-
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
-
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
-
 admin.initializeApp();
 
 exports.countBooks = onRequest((req, res) => {
@@ -46,6 +16,74 @@ exports.countBooks = onRequest((req, res) => {
     } catch (error) {
       console.error("Error counting books:", error.message);
       res.status(500).send("Error counting books");
+    }
+  });
+});
+
+exports.createUser = onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      // Ensure the request is a POST
+      if (req.method !== 'POST') {
+        return res.status(405).send('Method Not Allowed');
+      }
+
+      const { uid, firstName, lastName, email, address, phone, role } = req.body;
+
+      console.log(req.body);
+
+      // Validate required fields
+      if (!uid || !email) {
+        return res.status(400).send('Missing required fields: uid or email');
+      }
+
+      const userRef = admin.firestore().collection('users').doc(uid);
+
+      await userRef.set({
+        firstName: firstName || '',
+        lastName: lastName || '',
+        email,
+        address: address || '',
+        phone: phone || '',
+        role: role || 'member',
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      res.status(200).send({ success: true, message: 'User added to Firestore successfully.' });
+    } catch (error) {
+      console.error('Error adding user:', error.message);
+      res.status(500).send('Error adding user to Firestore');
+    }
+  });
+});
+
+exports.checkEmailExists = onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      // Only allow GET or POST requests
+      if (req.method !== 'POST' && req.method !== 'GET') {
+        return res.status(405).send('Method Not Allowed');
+      }
+
+      // Accept email either from body (POST) or query (GET)
+      const email = req.method === 'POST' ? req.body.email : req.query.email;
+
+      if (!email) {
+        return res.status(400).send('Missing required field: email');
+      }
+
+      const usersRef = admin.firestore().collection('users');
+      const snapshot = await usersRef.where('email', '==', email).get();
+
+      if (snapshot.empty) {
+        return res.status(200).send({ exists: false });
+      }
+
+      // Email exists
+      res.status(200).send({ exists: true });
+    } catch (error) {
+      console.error('Error checking email:', error.message);
+      res.status(500).send('Error checking email in Firestore');
     }
   });
 });
