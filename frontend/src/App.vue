@@ -5,34 +5,18 @@
 
     <nav class="mt-3 w-100">
       <ul class="nav nav-pills nav-justified px-3">
-        <li class="nav-item">
-          <RouterLink class="nav-link" to="/">Home Page</RouterLink>
-        </li>
-        <li class="nav-item">
-          <RouterLink class="nav-link" to="/events">Events</RouterLink>
-        </li>
-        <li class="nav-item">
-          <RouterLink class="nav-link" to="/blog">Blog</RouterLink>
-        </li>
-        <li class="nav-item">
-          <RouterLink class="nav-link" to="/newsletters">Newsletters</RouterLink>
-        </li>
-
-        <li class="nav-item">
-          <RouterLink class="nav-link" to="/admin">AdminDashboard</RouterLink>
-        </li>
-
-        <li class="nav-item">
-          <RouterLink class="nav-link" to="/UserDashboard">UserDashboard</RouterLink>
-        </li>
+        <li class="nav-item"><RouterLink class="nav-link" to="/">Home</RouterLink></li>
+        <li class="nav-item"><RouterLink class="nav-link" to="/events">Events</RouterLink></li>
+        <li class="nav-item"><RouterLink class="nav-link" to="/blog">Blog</RouterLink></li>
+        <li class="nav-item"><RouterLink class="nav-link" to="/admin">AdminDashboard</RouterLink></li>
+        <li class="nav-item"><RouterLink class="nav-link" to="/UserDashboard">UserDashboard</RouterLink></li>
 
         <!-- AUTH SLOT -->
         <li class="nav-item" @click="logout" v-if="isLoggedIn">
             Logout
         </li>
         <li class="nav-item" v-else>
-          <RouterLink class="nav-link" to="/loginregister">Login | Register</RouterLink>
-        </li>
+          <RouterLink class="nav-link" to="/loginregister">Login | Register</RouterLink></li>
       </ul>
     </nav>
 

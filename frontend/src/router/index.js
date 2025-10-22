@@ -3,7 +3,6 @@ import { createWebHistory, createRouter } from 'vue-router'
 import HomePageView from '@/pages/HomePageView.vue';
 import EventView from '@/pages/EventView.vue';
 import BlogView from '@/pages/BlogView.vue';
-import Newsletters from '@/pages/Newsletters.vue';
 import LoginRegisterView from '@/pages/LoginRegisterView.vue';
 import UserDashView from '@/pages/Dashboards/UserDashView.vue';
 import AdminDashView from '@/pages/Dashboards/AdminDashView.vue';
@@ -17,7 +16,6 @@ import AdminUsers from '@/pages/Dashboards/AdminActionsView.vue/AdminUsers.vue';
 const routes = [
     { path: '/events', name: "events", component: EventView},
     { path: '/blog', name: "blog", component: BlogView},
-    { path: '/newsletters', name: "newsletters", component: Newsletters},
     { path: '/loginRegister', name: "loginregister", component: LoginRegisterView},
     { path: '/admin', name: 'AdminHome', component: AdminDashView },
     { path: '/admin/events', name: 'AdminEvents', component: AdminEvents },
