@@ -36,10 +36,6 @@
                 <label class="form-label small">Start</label>
                 <input v-model="f.start" type="datetime-local" class="form-control" required />
               </div>
-              <div class="col-md-6">
-                <label class="form-label small">End</label>
-                <input v-model="f.end" type="datetime-local" class="form-control" />
-              </div>
             </div>
 
             <div class="d-flex gap-2 flex-wrap mt-2">
@@ -69,7 +65,6 @@ const f = reactive({
   suburb: '',
   state: '',
   start: '',
-  end: '',
   lat: null,
   lng: null,
 })
@@ -78,7 +73,6 @@ const preview = computed(() => ({
   title: f.title,
   summary: f.summary,
   start: f.start ? new Date(f.start).toISOString() : '',
-  end: f.end ? new Date(f.end).toISOString() : '',
   street: f.street,
   suburb: f.suburb,
   state: f.state,
@@ -121,13 +115,13 @@ async function saveEvent() {
       title: f.title,
       summary: f.summary,
       start: new Date(f.start).toISOString(),
-      end: new Date(f.end).toISOString(),
       street: f.street,
       suburb: f.suburb,
       state: f.state,
       lat: f.lat,
       lng: f.lng,
       image: f.image,
+      intrest: 0, attendance: 0
     };
 
     console.log(payload);

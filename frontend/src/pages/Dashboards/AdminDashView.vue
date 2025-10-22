@@ -22,12 +22,6 @@
             <span class="tile__desc">Create, edit, and delete blog posts.</span>
           </RouterLink>
 
-          <RouterLink class="tile" to="/admin/email" aria-label="Bulk Email">
-            <span class="tile__emoji" aria-hidden="true">📣</span>
-            <span class="tile__title">Bulk Email</span>
-            <span class="tile__desc">Send announcements to users.</span>
-          </RouterLink>
-
           <RouterLink class="tile" to="/admin/users" aria-label="Manage Users">
             <span class="tile__emoji" aria-hidden="true">👥</span>
             <span class="tile__title">Manage Users</span>
@@ -36,10 +30,14 @@
         </nav>
       </div>
     </section>
+    <section class="container">
+      <AdminStatsChart />
+    </section>
   </main>
 </template>
 
 <script setup>
+import AdminStatsChart from '@/components/ChartsView.vue'
 </script>
 
 <style scoped>
