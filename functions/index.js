@@ -205,3 +205,38 @@ exports.getRecentBlogs = onRequest((req, res) => {
   });
 });
 
+// Import SendGrid mail library
+const sgMail = require("@sendgrid/mail");
+// Set your SendGrid API key (store it securely e.g. in Functions config)
+sgMail.setApiKey('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');
+
+exports.sendWelcomeEmail = onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      if (req.method !== "POST") {
+        return res.status(405).send({ success: false, message: "Method Not Allowed" });
+      }
+
+      const { email, firstName, lastName } = req.body;
+      if (!email) {
+        return res.status(400).send({ success: false, message: "Missing email" });
+      }
+
+      // Compose message
+      const msg = {
+        to: email,
+        from: "semogenaz@gmail.com", // Must be verified in your SendGrid account
+        subject: "Welcome to Clayton Pool Association!",
+        text: `Hello ${firstName || ""} ${lastName || ""},\n\nThank you for registering with Clayton Pool Association.`,
+        html: `<p>Hello ${firstName || ""} ${lastName || ""},</p><p>Thank you for registering with Clayton Pool Association.</p>`,
+      };
+
+      const emailRes = await sgMail.send(msg);
+
+      res.status(200).send({ success: true, message: emailRes[0].headers, status: emailRes[0].statusCode });
+    } catch (error) {
+      console.error("Error sending welcome email:", error);
+      res.status(500).send({ success: false, message: "Error sending email: " + error.message });
+    }
+  });
+});

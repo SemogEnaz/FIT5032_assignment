@@ -217,7 +217,7 @@ const validatePassword = (blur) => {
 }
 
 
-const validateEmail = async (blur) => {
+const validateEmail = (blur) => {
   const email = register.value.email?.trim() || ''
   const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
   if (!email) { if (blur) errors.value.email = 'Email is required.' }
@@ -248,9 +248,11 @@ const validateLoginEmail = (blur) => {
 function setCookie(name, value, maxAgeSeconds = 60 * 60 * 24 * 7) {
   document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; path=/; max-age=${maxAgeSeconds}; samesite=lax`
 }
+
 function getUsers() {
   return JSON.parse(localStorage.getItem('users') || '[]')
 }
+
 async function saveUsers(user) {
   console.log("📦 Sending user:", user);
 
@@ -354,7 +356,7 @@ async function submitLogin() {
 /* -------------------- submit: REGISTER (Firebase + local profile + session) -------------------- */
 async function submitRegister() {
   registerError.value = ''
-  validateName(true); await validateEmail(true); validatePassword(true); validateConfirmPassword(true)
+  validateName(true); validateEmail(true); validatePassword(true); validateConfirmPassword(true)
   if (errors.value.userName || errors.value.email || errors.value.password || errors.value.confirmPassword || !isPasswordsMatch.value) return
 
   // prevent using reserved admin email
@@ -387,10 +389,32 @@ async function submitRegister() {
     await saveUsers(newUser);
 
     setSessionUser(newUser) // immediate login
+
+    try {
+      const res = await fetch('https://sendwelcomeemail-5bgqwovi2q-uc.a.run.app', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            email: register.value.email,
+            firstName: register.value.firstName,
+            lastName: register.value.lastName
+          })
+        });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        console.error('❌ Failed to send email:', data);
+      } else {
+        console.log('✅ Successfully sent email:', data);
+      }
+    } catch (emailError) {
+      console.warn("Welcome email failed to send:", emailError);
+    }
     
     isLogin.value = true
-    window.dispatchEvent(new StorageEvent('storage', { key: 'sessionUser' }))
-    router.push('/')
+    //window.dispatchEvent(new StorageEvent('storage', { key: 'sessionUser' }))
+    //router.push('/')
   } catch (e) {
     const map = {
       'auth/email-already-in-use': 'Email is already registered.',
