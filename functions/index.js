@@ -153,3 +153,55 @@ exports.getRecentEvents = onRequest((req, res) => {
     }
   });
 });
+
+// functions/index.js
+exports.createBlog = onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      const data = req.body;
+      if (!data.title || !data.slug || !data.date) {
+        return res.status(400).send({ success: false, message: 'Missing required fields' });
+      }
+
+      const blogRef = admin.firestore().collection('blogs').doc(data.slug);
+      await blogRef.set({
+        title: data.title,
+        slug: data.slug,
+        date: data.date,
+        excerpt: data.excerpt || '',
+        body: data.body || '',
+        cover: data.cover || '',
+        tags: data.tags || [],
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      res.status(200).send({ success: true, message: 'Blog created successfully', blog: data });
+    } catch (error) {
+      console.error('Error creating blog:', error);
+      res.status(500).send({ success: false, message: error.message });
+    }
+  });
+});
+
+exports.getRecentBlogs = onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      const blogsRef = await admin.firestore().collection('blogs');
+      const snapshot = await blogsRef
+          .orderBy('date', 'desc')
+          .limit(3)
+          .get();
+
+      const blogs = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      res.status(200).send({ success: true, blogs });
+    } catch (error) {
+      console.error('Error fetching blogs:', error);
+      res.status(500).send({ success: false, message: error.message });
+    }
+  });
+});
+

@@ -68,53 +68,16 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
+import axios from 'axios';
 
-// Local mock data (no props)
-const posts = ref([
-  {
-    slug: 'league-highlights-aug',
-    title: 'League Highlights – August Wrap',
-    date: '2025-08-18',
-    readMins: 4,
-    excerpt: 'A look back at the most exciting frames and big breaks from August.',
-    tags: ['events', 'highlights'],
-    cover: 'https://upatour.com/wp-content/uploads/2018/06/LRG_DSC01088.jpg'
-  },
-  {
-    slug: 'cue-care-101',
-    title: 'Cue Care 101: Make Your Cue Last',
-    date: '2025-07-29',
-    readMins: 6,
-    excerpt: 'Simple maintenance tips to keep your cue straight and smooth.',
-    tags: ['tips'],
-    cover: 'https://www.pooldawg.com/articleee/assests/example-b.jpg'
-  },
-  {
-    slug: 'meet-the-coaches',
-    title: 'Meet the Coaches: Q&A',
-    date: '2025-06-12',
-    readMins: 5,
-    excerpt: 'We sat down with our coaching team to talk drills, mindset, and more.',
-    tags: ['community', 'coaching'],
-    cover: 'https://images.unsplash.com/photo-1520975916090-3105956dac38?q=80&w=1600&auto=format&fit=crop'
-  },
-  {
-    slug: 'social-night-recap',
-    title: 'Social Night Recap',
-    date: '2025-09-01',
-    readMins: 3,
-    excerpt: 'Big turnout, friendly matches, and pizza—here’s what you missed.',
-    tags: ['community', 'events'],
-    cover: 'https://instagram.fsyd14-1.fna.fbcdn.net/v/t39.30808-6/528801150_122171977622495520_725561825731952275_n.jpg?stp=dst-jpg_e35_tt6&efg=eyJ2ZW5jb2RlX3RhZyI6IkZFRUQuaW1hZ2VfdXJsZ2VuLjE2Mzh4MjA0OC5zZHIuZjMwODA4LmRlZmF1bHRfaW1hZ2UuYzIifQ&_nc_ht=instagram.fsyd14-1.fna.fbcdn.net&_nc_cat=100&_nc_oc=Q6cZ2QHnN_Jg5Z0UjxLpVXL4PihQT2tD_-gs3MGBmKQ4Vo30-oku1GRfeP1CHWfUo2LSVhVDPfBcpNpdU-MoaRgW795P&_nc_ohc=e5SpZ2WtoBcQ7kNvwGzMWyn&_nc_gid=Vf7wUSrthYsGw-ptmqgoAw&edm=APs17CUAAAAA&ccb=7-5&ig_cache_key=MzY5MzE1MTg0MjgwMDQzNDQwMg%3D%3D.3-ccb7-5&oh=00_AfZZOVBaJBSDCWdBi2H7LRFDWHIwm79mEj78LK7jSNpb9w&oe=68C1C7DF&_nc_sid=10d13b'
-  }
-])
-
-const perPage = ref(6)
+const posts = ref([])
 const q = ref('')
 const selectedTag = ref('')
 const sortBy = ref('date-desc')
 const page = ref(1)
+const perPage = ref(6)
+const error = ref(null)
 
 const allTags = computed(() => {
   const set = new Set()
@@ -152,4 +115,14 @@ function formatDate(iso) {
 function mockEngage(slug) {
   alert(`This is a demo. On the real site, this would open comments for: ${slug}`)
 }
+
+onMounted(async () => {
+  try {
+    const res = await axios.get('https://getrecentblogs-5bgqwovi2q-uc.a.run.app')
+    if (res.data?.success) posts.value = res.data.blogs
+  } catch (err) {
+    error.value = err.message
+    console.error('Error fetching blogs:', err)
+  }
+})
 </script>

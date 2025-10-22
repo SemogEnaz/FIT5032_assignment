@@ -61,13 +61,12 @@
 
 <script setup>
 import { reactive, ref, computed } from 'vue'
+import axios from 'axios'
 
-const posts = ref([
-  { slug:'season-kickoff', title:'Season Kickoff', date:'2025-09-10', excerpt:'Fixtures & programs.', body:'...', cover:'', tags:['news'] }
-])
+const posts = ref([])
 
 const form = reactive({
-  _edit: false, // slug being edited or false
+  _edit: false,
   title:'', slug:'', date: new Date().toISOString().slice(0,10),
   excerpt:'', body:'', cover:'', tagsCsv:''
 })
@@ -82,16 +81,32 @@ const preview = computed(() => ({
   tags: (form.tagsCsv || '').split(',').map(s=>s.trim()).filter(Boolean)
 }))
 
-function save() {
+// ✅ Cloud Function call here
+async function save() {
   const data = { ...preview.value }
-  if (form._edit) {
-    const i = posts.value.findIndex(p => p.slug === form._edit)
-    if (i >= 0) posts.value[i] = data
-  } else {
-    posts.value.unshift(data)
+
+  try {
+    const res = await axios.post(
+      'https://createblog-5bgqwovi2q-uc.a.run.app',
+      data,
+      { headers: { 'Content-Type': 'application/json' } }
+    )
+
+    if (res.data?.success) {
+      alert('✅ Blog created successfully!')
+      console.log('Created blog:', res.data.blog)
+      posts.value.unshift(data)
+      reset()
+    } else {
+      throw new Error(res.data?.message || 'Unknown error')
+    }
+
+  } catch (err) {
+    console.error('❌ Error creating blog:', err)
+    alert(`Failed to create blog: ${err.message}`)
   }
-  reset()
 }
+
 function edit(slug) {
   const p = posts.value.find(p => p.slug === slug)
   if (!p) return
@@ -100,6 +115,7 @@ function edit(slug) {
   form.excerpt = p.excerpt; form.body = p.body; form.cover = p.cover || ''
   form.tagsCsv = (p.tags || []).join(', ')
 }
+
 function remove(slug) { posts.value = posts.value.filter(p => p.slug !== slug) }
 function reset() {
   form._edit = false; form.title = ''; form.slug = ''; form.date = new Date().toISOString().slice(0,10)
