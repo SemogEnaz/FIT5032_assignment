@@ -38,7 +38,7 @@
               </div>
               <div class="col-md-6">
                 <label class="form-label small">End</label>
-                <input v-model="f.end" type="datetime-local" class="form-control" required />
+                <input v-model="f.end" type="datetime-local" class="form-control" />
               </div>
             </div>
 
@@ -64,13 +64,12 @@ import { computed, reactive } from 'vue'
 const f = reactive({
   title: '',
   summary: '',
-  location: '',
-  start: '',
-  end: '',
   image: '',
   street: '',
   suburb: '',
   state: '',
+  start: '',
+  end: '',
   lat: null,
   lng: null,
 })
@@ -83,11 +82,41 @@ const preview = computed(() => ({
   street: f.street,
   suburb: f.suburb,
   state: f.state,
+  lat: f.lat,
+  lng: f.lng,
   image: f.image,
-}))
+}));
+
+async function getLatLng() {
+  try {
+    const res = await fetch("https://us-central1-fit5032-week6-da697.cloudfunctions.net/getLatLngFromAddress", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        street: f.street,
+        suburb: f.suburb,
+        state: f.state,
+        country: "Australia",
+      }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      f.lat = data.lat;
+      f.lng = data.lng;
+      console.log("✅ Coordinates:", data.lat, data.lng);
+    } else {
+      alert("⚠️ Could not get coordinates: " + data.message);
+    }
+  } catch (err) {
+    console.error("❌ Error fetching coordinates:", err);
+  }
+}
 
 async function saveEvent() {
   try {
+
+    await getLatLng();
+
     const payload = {
       title: f.title,
       summary: f.summary,
@@ -96,8 +125,10 @@ async function saveEvent() {
       street: f.street,
       suburb: f.suburb,
       state: f.state,
+      lat: f.lat,
+      lng: f.lng,
       image: f.image,
-    }
+    };
 
     console.log(payload);
 
@@ -117,6 +148,8 @@ async function saveEvent() {
     alert(`Failed: ${e.message}`)
   }
 }
+
+
 
 function reset() {
   Object.keys(f).forEach(k => f[k] = (typeof f[k] === 'number' ? null : ''))

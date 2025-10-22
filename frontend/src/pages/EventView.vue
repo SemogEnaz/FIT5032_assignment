@@ -1,41 +1,14 @@
 <template>
-  <main class="events-page py-4">
+  <main class="events-page py-4 d-flex flex-column">
     <!-- Header -->
     <section class="container text-center mb-4">
       <h1 class="mb-2">Events</h1>
-      <p class="lead mb-0">Find meets, comps, and socials. Map is a placeholder for geo features.</p>
+      <p class="lead mb-0">Find meets, comps, and socials — displayed live on the map.</p>
     </section>
 
-    <!-- Filters -->
-    <section class="container mb-4">
-      <div class="row g-2 justify-content-center">
-        <div class="col-12 col-md-6 col-lg-4">
-          <input v-model.trim="q" type="search" class="form-control" placeholder="Search events..." />
-        </div>
-        <div class="col-12 col-md-4 col-lg-3">
-          <select v-model="month" class="form-select">
-            <option value="">Any month</option>
-            <option v-for="m in months" :key="m.value" :value="m.value">{{ m.label }}</option>
-          </select>
-        </div>
-      </div>
-    </section>
 
-    <!-- Mock Map -->
-    <section class="container mb-4">
-      <div class="position-relative border rounded bg-white" style="height: 360px; overflow: hidden;">
-        <div
-          v-for="e in filtered"
-          :key="e.id"
-          class="pin"
-          :style="pinStyle(e)"
-          :title="e.title"
-        ></div>
-        <div class="position-absolute end-0 bottom-0 m-2 small px-2 py-1 bg-white border rounded text-secondary">
-          Mock map — pins positioned from lat/lng (scaled)
-        </div>
-      </div>
-    </section>
+    <!-- 🗺️ Real Mapbox Map -->
+    <div id="map" style="height:400px; width: 80%"></div>
 
     <!-- List -->
     <div v-if="error" class="alert alert-danger text-center container mt-3">
@@ -54,7 +27,7 @@
                 </div>
                 <h5 class="mb-0">{{ e.title }}</h5>
               </div>
-              <p class="text-muted mb-2" v-if="e.location">📍 {{ e.location }}</p>
+              <p class="text-muted mb-2">📍 {{ e.street }}, {{ e.suburb }}, {{ e.state }}</p>
               <p class="mb-3 mx-2">{{ e.summary }}</p>
               <router-link class="btn btn-dark btn-sm" :to="`/events/${e.id}`">Details</router-link>
               <RatingWidget :item-id="e.id" kind="event" class="mt-3" />
@@ -73,22 +46,25 @@
 <script setup>
 import RatingWidget from '../components/RatingWidget.vue'
 import axios from 'axios'
+import mapboxgl from 'mapbox-gl'
 import { ref, computed, onMounted } from 'vue'
 
+mapboxgl.accessToken = 'pk.eyJ1IjoiemFuZWdvbWVzIiwiYSI6ImNrdWdkbTAyaTBwbDIybm9reDc2YTN1cTUifQ.VjtSCzzUg7gg64u2HaAnBg'
+
+let mapInstance = null
 const q = ref('')
 const month = ref('')
-
 const events = ref([])
 const error = ref(null)
 
 onMounted(async () => {
   await getEvents()
+  initMap()
 })
 
 async function getEvents() {
   try {
     const res = await axios.get('https://getrecentevents-5bgqwovi2q-uc.a.run.app')
-    console.log(res.data);
     if (res.data?.success && Array.isArray(res.data.events)) {
       events.value = res.data.events
     } else {
@@ -100,20 +76,62 @@ async function getEvents() {
   }
 }
 
+function initMap() {
 
-const months = computed(() => {
-  const year = new Date().getFullYear()
-  return Array.from({ length: 12 }, (_, i) => {
-    const d = new Date(year, i, 1)
-    return { value: String(i), label: d.toLocaleString(undefined, { month: 'long' }) }
+  mapInstance = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/standard',
+    center: [144.9631, -37.8136],
+    zoom: 10,
   })
-})
+
+  mapInstance.addControl(new mapboxgl.NavigationControl())
+
+  mapInstance.on('load', () => {
+    console.log('🗺️ Map loaded')
+    addMarkers(events.value)
+  })
+
+}
+
+function addMarkers(eventsList) {
+  if (!mapInstance) return
+
+  // Remove previous markers
+  document.querySelectorAll('.mapboxgl-marker').forEach(m => m.remove())
+
+  const raw = JSON.parse(JSON.stringify(eventsList))
+  console.log('✅ Adding markers:', raw)
+
+  raw.forEach(e => {
+    if (typeof e.lng !== 'number' || typeof e.lat !== 'number') return
+
+    console.log(e.lng, e.lat)
+
+    // Create a default marker with popup (classic Mapbox style)
+    const popup = new mapboxgl.Popup({ offset: 25 })
+      .setHTML(`<strong>${e.title}</strong><br>${e.street}, ${e.suburb}`)
+
+    new mapboxgl.Marker({ color: 'red', rotation: 0 }) // red pin
+      .setLngLat([e.lng, e.lat])
+      .setPopup(popup)
+      .addTo(mapInstance)
+  })
+
+  // Fit map bounds
+  if (raw.length) {
+    const bounds = new mapboxgl.LngLatBounds()
+    raw.forEach(e => bounds.extend([e.lng, e.lat]))
+    mapInstance.fitBounds(bounds, { padding: 50 })
+  }
+}
+
 
 const filtered = computed(() => {
   const term = q.value.toLowerCase()
   return events.value
     .filter(e => {
-      const matchesQ = !term || `${e.title} ${e.summary} ${e.location}`.toLowerCase().includes(term)
+      const matchesQ = !term || `${e.title} ${e.summary} ${e.street} ${e.suburb}`.toLowerCase().includes(term)
       const m = new Date(e.start).getMonth()
       const matchesMonth = month.value === '' || String(m) === String(month.value)
       return matchesQ && matchesMonth
@@ -121,26 +139,9 @@ const filtered = computed(() => {
     .sort((a, b) => new Date(a.start) - new Date(b.start))
 })
 
-// Mock map pin placement: scale lat/lng to 0..1 then to canvas size
-function pinStyle(e) {
-  const latMin = -38.1, latMax = -37.6, lngMin = 144.85, lngMax = 145.20
-  const x = (e.lng - lngMin) / (lngMax - lngMin)
-  const y = 1 - (e.lat - latMin) / (latMax - latMin)
-  return { left: `${x * 100}%`, top: `${y * 100}%` }
-}
-
 function day(iso) { return new Date(iso).getDate().toString().padStart(2, '0') }
 function mon(iso) { return new Date(iso).toLocaleString(undefined, { month: 'short' }).toUpperCase() }
 </script>
 
 <style scoped>
-.pin {
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: #212529; /* bootstrap dark */
-  transform: translate(-50%, -50%);
-  box-shadow: 0 0 0 3px rgba(33, 37, 41, 0.15);
-}
 </style>
