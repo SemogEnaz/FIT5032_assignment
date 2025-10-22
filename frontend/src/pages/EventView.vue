@@ -38,7 +38,11 @@
     </section>
 
     <!-- List -->
-    <section class="container">
+    <div v-if="error" class="alert alert-danger text-center container mt-3">
+      {{ error }}
+    </div>
+
+    <section v-else class="container">
       <div class="row g-3">
         <div v-for="e in filtered" :key="e.id" class="col-12 col-md-6">
           <div class="card h-100 d-flex">
@@ -68,17 +72,34 @@
 
 <script setup>
 import RatingWidget from '../components/RatingWidget.vue'
-import { computed, ref } from 'vue'
-
-const events = ref([
-  { id: 'open', title: 'Open Night', start: '2025-09-06T18:30:00', location: 'Main Hall', summary: 'Meet & greet + free play.', lat: -37.8136, lng: 144.9631 },
-  { id: 'clinic', title: 'Coaching Clinic', start: '2025-09-12T10:00:00', location: 'Training Room', summary: 'Small group session.', lat: -37.7000, lng: 145.0000 },
-  { id: 'league-r1', title: 'League Round 1', start: '2025-10-01T19:00:00', location: 'Court 2', summary: 'First round of league.', lat: -37.9000, lng: 145.1000 },
-  { id: 'social', title: 'Friday Social', start: '2025-09-19T19:30:00', location: 'Lounge', summary: 'Casual matches + pizza.', lat: -37.8200, lng: 144.9900 }
-])
+import axios from 'axios'
+import { ref, computed, onMounted } from 'vue'
 
 const q = ref('')
 const month = ref('')
+
+const events = ref([])
+const error = ref(null)
+
+onMounted(async () => {
+  await getEvents()
+})
+
+async function getEvents() {
+  try {
+    const res = await axios.get('https://getrecentevents-5bgqwovi2q-uc.a.run.app')
+    console.log(res.data);
+    if (res.data?.success && Array.isArray(res.data.events)) {
+      events.value = res.data.events
+    } else {
+      throw new Error('Unexpected API response')
+    }
+  } catch (err) {
+    console.error('Error fetching events:', err)
+    error.value = 'Failed to load events.'
+  }
+}
+
 
 const months = computed(() => {
   const year = new Date().getFullYear()

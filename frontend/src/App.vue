@@ -1,9 +1,7 @@
 <template>
-  <div class="d-flex flex-column align-items-center">
-    
-    <template v-if="showHeader">
+  <div v-if="showHeader" class="d-flex flex-column align-items-center">
 
-      <h1 class="mt-3">Clayton Pool Assocation</h1>
+    <h1 class="mt-3">Clayton Pool Assocation</h1>
 
     <nav class="mt-3 w-100">
       <ul class="nav nav-pills nav-justified px-3">
@@ -38,10 +36,8 @@
       </ul>
     </nav>
 
-    </template>
-    
-    <RouterView class="mt-4" />
   </div>
+  <RouterView class="mt-4 flex-column align-items-center w-100" style="width: 95%"/>
 </template>
 
 <script setup>

@@ -1,5 +1,5 @@
 <template>
-    <section class="hero">
+    <section class="hero d-flex flex-column align-items-center">
       <img
         class="hero__img"
         :src="heroImg"

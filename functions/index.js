@@ -128,3 +128,28 @@ exports.createEvent = onRequest((req, res) => {
     }
   });
 });
+
+exports.getRecentEvents = onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      const eventsRef = admin.firestore().collection('events');
+      const snapshot = await eventsRef
+          .orderBy('start', 'desc')
+          .limit(3)
+          .get();
+
+      const events = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      res.status(200).send({ success: true, events });
+    } catch (error) {
+      console.error('🔥 Error fetching recent events:', error);
+      res.status(500).send({
+        success: false,
+        message: 'Error fetching events: ' + error.message,
+      });
+    }
+  });
+});

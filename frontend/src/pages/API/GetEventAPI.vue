@@ -1,14 +1,29 @@
 <template>
-  <pre>{{ jsondata }}</pre>
+    <div v-if="error" class="alert alert-danger">
+      {{ error }}
+    </div>
+
+    <pre v-if="jsondata">{{ jsondata }}</pre>
+
+    <ul v-else-if="events.length" class="list-group">
+      <li v-for="event in events" :key="event.id" class="list-group-item">
+        <strong>{{ event.title }}</strong>
+        <br>
+        <small>{{ formatDate(event.start) }}</small>
+      </li>
+    </ul>
+
+    <p v-else class="text-muted">No events found.</p>
 </template>
 
 <script>
-import axios from 'axios'; // kept for consistency with your CountBookAPI example
+import axios from 'axios';
 
 export default {
   name: 'GetEventAPI',
   data() {
     return {
+      events: [],
       jsondata: null,
       error: null,
     };
@@ -19,30 +34,47 @@ export default {
   methods: {
     async getEventAPI() {
       try {
-        // For now, mock Firestore data
-        const mockEvents = [
-          { id: 1, name: "Club Open Night", date: "2025-10-21" },
-          { id: 2, name: "Coaching Clinic", date: "2025-10-25" },
-          { id: 3, name: "Friday Social", date: "2025-11-01" },
-        ];
+        const response = await axios.get(
+          'https://getrecentevents-5bgqwovi2q-uc.a.run.app'
+        );
 
-        // Placeholder API endpoint — replace with your real Cloud Function/Run URL
-        let response = await axios.get('', {
+        if (response.data?.success && Array.isArray(response.data.events)) {
+          this.events = response.data.events;
+          this.jsondata = JSON.stringify(response.data.events, null, 2);
+          this.error = null;
+        } else {
+          throw new Error('Unexpected API response');
+        }
+      } catch (err) {
+        console.error('Error fetching events:', err);
+        this.error = 'Failed to fetch events.';
+        this.jsondata = { error: err.message };
+      }
+    },
+
+    formatDate(iso) {
+      try {
+        return new Date(iso).toLocaleString(undefined, {
+          dateStyle: 'medium',
+          timeStyle: 'short',
         });
-
-        // Simulate API/Firestore lookup
-        // (You can later replace this with an axios call to your Firebase Cloud Function)
-        response = { data: { events: mockEvents } };
-
-        // Return JSON like a backend would
-        this.jsondata = response.data.events;
-        this.error = null;
-      } catch (error) {
-        console.error('Error fetching events:', error);
-        this.error = error;
-        this.jsondata = { error: 'Failed to fetch events.' };
+      } catch {
+        return iso;
       }
     },
   },
 };
 </script>
+
+<style scoped>
+.container {
+  max-width: 700px;
+}
+pre {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  overflow-x: auto;
+}
+</style>
