@@ -341,3 +341,89 @@ exports.getRecentAttendance = onRequest((req, res) => {
   });
 });
 
+exports.registerForEvent = onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      if (req.method !== "POST") {
+        return res.status(405).send("Method Not Allowed");
+      }
+
+      const { eventId, uid, email } = req.body;
+      if (!eventId || !uid || !email) {
+        return res.status(400).send("Missing eventId, uid, or email");
+      }
+
+      const regRef = admin
+          .firestore()
+          .collection("events")
+          .doc(eventId)
+          .collection("registrations")
+          .doc(uid);
+
+      await regRef.set({
+        uid,
+        email,
+        registeredAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      res.status(200).send({ success: true, message: "User registered successfully" });
+    } catch (error) {
+      console.error("🔥 Error registering:", error);
+      res.status(500).send({ success: false, message: error.message });
+    }
+  });
+});
+
+const { onSchedule } = require("firebase-functions/v2/scheduler");
+
+exports.sendEventReminders = onSchedule("every 1 hours", async (event) => {
+  const db = admin.firestore();
+  const now = new Date();
+  const next24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+  const eventsSnap = await db
+      .collection("events")
+      .where("start", ">=", admin.firestore.Timestamp.fromDate(now))
+      .where("start", "<=", admin.firestore.Timestamp.fromDate(next24h))
+      .get();
+
+  if (eventsSnap.empty) {
+    console.log("No events starting in next 24 hours.");
+    return;
+  }
+
+  for (const eventDoc of eventsSnap.docs) {
+    const eventData = eventDoc.data();
+    const registrationsSnap = await db
+        .collection("events")
+        .doc(eventDoc.id)
+        .collection("registrations")
+        .get();
+
+    if (registrationsSnap.empty) continue;
+
+    const emails = registrationsSnap.docs.map((doc) => doc.data().email);
+    console.log(`📬 Sending reminders for "${eventData.title}" to`, emails);
+
+    const messages = emails.map((email) => ({
+      to: email,
+      from: "noreply@claytonpool.org",
+      subject: `Reminder: ${eventData.title} is tomorrow!`,
+      html: `
+        <p>Hello,</p>
+        <p>This is a reminder that <strong>${eventData.title}</strong> is happening soon.</p>
+        <p>📍 Location: ${eventData.street}, ${eventData.suburb}, ${eventData.state}</p>
+        <p>🕒 Date: ${new Date(eventData.start.toDate()).toLocaleString()}</p>
+        <p>See you there!</p>
+      `,
+    }));
+
+    try {
+      await sgMail.send(messages);
+      console.log(`✅ Sent ${messages.length} reminders for "${eventData.title}"`);
+    } catch (err) {
+      console.error("❌ Error sending reminders:", err);
+    }
+  }
+});
+

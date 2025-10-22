@@ -29,7 +29,9 @@
               </div>
               <p class="text-muted mb-2">📍 {{ e.street }}, {{ e.suburb }}, {{ e.state }}</p>
               <p class="mb-3 mx-2">{{ e.summary }}</p>
-              <router-link class="btn btn-dark btn-sm" :to="`/events/${e.id}`">Details</router-link>
+              <button class="btn btn-dark btn-sm" @click="registerForEvent(e.id)">
+                Register
+              </button>              
               <RatingWidget :item-id="e.id" kind="event" class="mt-3" />
             </div>
           </div>
@@ -138,6 +140,36 @@ const filtered = computed(() => {
     })
     .sort((a, b) => new Date(a.start) - new Date(b.start))
 })
+
+const registering = ref(false);
+
+async function registerForEvent(eventId) {
+  const user = JSON.parse(localStorage.getItem("sessionUser"));
+  if (!user || !user.email) {
+    alert("Please log in to register for events.");
+    return;
+  }
+
+  registering.value = true;
+  try {
+    const res = await axios.post(
+      "https://registerforevent-5bgqwovi2q-uc.a.run.app",
+      {
+        eventId,
+        uid: user.id,
+        email: user.email,
+      }
+    );
+
+    console.log("✅ Registration success:", res.data);
+    alert(`You are registered for "${res.data.title || 'this event'}"!`);
+  } catch (err) {
+    console.error("❌ Registration failed:", err);
+    alert("Failed to register. Please try again.");
+  } finally {
+    registering.value = false;
+  }
+}
 
 function day(iso) { return new Date(iso).getDate().toString().padStart(2, '0') }
 function mon(iso) { return new Date(iso).toLocaleString(undefined, { month: 'short' }).toUpperCase() }
