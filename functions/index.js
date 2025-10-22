@@ -5,6 +5,9 @@ const cors = require("cors")({origin: true});
 setGlobalOptions({maxInstances: 10});
 admin.initializeApp();
 
+const { Resend } = require('resend');
+const resend = new Resend('re_b1Bxz88i_EUv4KahveDrfqcETcr6ceXJW');
+
 exports.createUser = onRequest((req, res) => {
   cors(req, res, async () => {
     try {
@@ -226,18 +229,14 @@ exports.sendWelcomeEmail = onRequest((req, res) => {
         return res.status(400).send({ success: false, message: "Missing email" });
       }
 
-      // Compose message
-      const msg = {
-        to: email,
-        from: "zgom0003@student.monash.edu", // Must be verified in your SendGrid account
+      resend.emails.send({
+        from: "onboarding@resend.dev",
+        to: 'semogenaz@gmail.com',
         subject: "Welcome to Clayton Pool Association!",
-        text: `Hello ${firstName || ""} ${lastName || ""},\n\nThank you for registering with Clayton Pool Association.`,
-        html: `<p>Hello ${firstName || ""} ${lastName || ""},</p><p>Thank you for registering with Clayton Pool Association.</p>`,
-      };
+        html: `<p>Hello ${firstName || ""} ${lastName || ""},</p><p>Thank you for registering with Clayton Pool Association.</p>`
+      });
 
-      const emailRes = await sgMail.send(msg);
-
-      res.status(200).send({ success: true, message: emailRes[0].headers, status: emailRes[0].statusCode });
+      res.status(200).send({ success: true, message: 'Email sent successfully' });
     } catch (error) {
       console.error("Error sending welcome email:", error);
       res.status(500).send({ success: false, message: "Error sending email: " + error.message });
@@ -405,25 +404,13 @@ exports.sendEventReminders = onSchedule("every 1 hours", async (event) => {
     const emails = registrationsSnap.docs.map((doc) => doc.data().email);
     console.log(`📬 Sending reminders for "${eventData.title}" to`, emails);
 
-    const messages = emails.map((email) => ({
-      to: email,
-      from: "noreply@claytonpool.org",
-      subject: `Reminder: ${eventData.title} is tomorrow!`,
-      html: `
-        <p>Hello,</p>
-        <p>This is a reminder that <strong>${eventData.title}</strong> is happening soon.</p>
-        <p>📍 Location: ${eventData.street}, ${eventData.suburb}, ${eventData.state}</p>
-        <p>🕒 Date: ${new Date(eventData.start.toDate()).toLocaleString()}</p>
-        <p>See you there!</p>
-      `,
-    }));
-
-    try {
-      await sgMail.send(messages);
-      console.log(`✅ Sent ${messages.length} reminders for "${eventData.title}"`);
-    } catch (err) {
-      console.error("❌ Error sending reminders:", err);
-    }
+    const { data, error } = await resend.batch.send([
+      {
+        from: 'onboarding@resend.dev',
+        to: emails,
+        subject: 'hello world',
+        html: '<h1>it works!</h1>',
+      },
+    ]);
   }
 });
-
