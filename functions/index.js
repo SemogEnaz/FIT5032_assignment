@@ -408,9 +408,107 @@ exports.sendEventReminders = onSchedule("every 1 hours", async (event) => {
       {
         from: 'onboarding@resend.dev',
         to: emails,
-        subject: 'hello world',
-        html: '<h1>it works!</h1>',
+        subject: 'Upcoming Event Reminder',
+        html: `You have registered to attend ${eventData.title} at ${eventData.start}`,
       },
     ]);
   }
+});
+
+exports.rateEvent = onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      if (req.method !== "POST") {
+        return res.status(405).send({ success: false, message: "Method Not Allowed" });
+      }
+
+      const { eventId, uid, rating } = req.body;
+      if (!eventId || !uid || typeof rating !== "number") {
+        return res.status(400).send({ success: false, message: "Missing eventId, uid or rating" });
+      }
+
+      const db = admin.firestore();
+      const eventRef = db.collection("events").doc(eventId);
+      const eventDoc = await eventRef.get();
+
+      if (!eventDoc.exists) {
+        return res.status(404).send({ success: false, message: "Event not found" });
+      }
+
+      // Use subcollection to store user ratings (1 per user)
+      const userRatingRef = eventRef.collection("ratings").doc(uid);
+      const userRatingDoc = await userRatingRef.get();
+
+      if (userRatingDoc.exists) {
+        return res.status(400).send({ success: false, message: "User already rated this event." });
+      }
+
+      // Save the user's rating
+      await userRatingRef.set({
+        rating,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      // Recalculate average rating from all ratings in subcollection
+      const allRatingsSnap = await eventRef.collection("ratings").get();
+      const ratings = allRatingsSnap.docs.map((doc) => doc.data().rating);
+      const avgRating = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+
+      // Update the event document
+      await eventRef.update({
+        avgRating,
+        ratingCount: ratings.length,
+      });
+
+      res.status(200).send({
+        success: true,
+        avgRating,
+        ratingCount: ratings.length,
+        message: "Rating submitted successfully.",
+      });
+    } catch (error) {
+      console.error("🔥 Error rating event:", error);
+      res.status(500).send({ success: false, message: error.message });
+    }
+  });
+});
+
+exports.getEventRating = onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      const eventId = req.query.eventId;
+      const uid = req.query.uid; // optional
+      if (!eventId) {
+        return res.status(400).send({ success: false, message: "Missing eventId" });
+      }
+
+      const db = admin.firestore();
+      const eventRef = db.collection("events").doc(eventId);
+      const doc = await eventRef.get();
+
+      if (!doc.exists) {
+        return res.status(404).send({ success: false, message: "Event not found" });
+      }
+
+      const data = doc.data();
+      let userRating = null;
+
+      if (uid) {
+        const userRatingDoc = await eventRef.collection("ratings").doc(uid).get();
+        if (userRatingDoc.exists) {
+          userRating = userRatingDoc.data().rating;
+        }
+      }
+
+      res.status(200).send({
+        success: true,
+        avgRating: data.avgRating || 0,
+        ratingCount: data.ratingCount || 0,
+        userRating: userRating,
+      });
+    } catch (error) {
+      console.error("🔥 Error fetching rating:", error);
+      res.status(500).send({ success: false, message: error.message });
+    }
+  });
 });
