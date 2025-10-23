@@ -308,18 +308,28 @@ exports.getRecentAttendance = onRequest((req, res) => {
         return res.status(200).json({ success: true, data: [] });
       }
 
-      // Aggregate attendance totals by day
+      // Aggregate attendance + interest totals by day
       const totals = {};
       snapshot.forEach((doc) => {
         const e = doc.data();
         // ✅ Convert Firestore Timestamp -> JS Date
         const eventDate = e.start.toDate().toISOString().split("T")[0];
-        totals[eventDate] = (totals[eventDate] || 0) + (e.attendance || 0);
+
+        if (!totals[eventDate]) {
+          totals[eventDate] = { totalAttendance: 0, totalInterest: 0 };
+        }
+
+        totals[eventDate].totalAttendance += e.attendance || 0;
+        totals[eventDate].totalInterest += e.interest || 0;
       });
 
       // Convert totals to sorted array
       const result = Object.entries(totals)
-          .map(([date, totalAttendance]) => ({ date, totalAttendance }))
+          .map(([date, { totalAttendance, totalInterest }]) => ({
+            date,
+            totalAttendance,
+            totalInterest,
+          }))
           .sort((a, b) => new Date(a.date) - new Date(b.date));
 
       console.log("✅ Returning result:", result);
