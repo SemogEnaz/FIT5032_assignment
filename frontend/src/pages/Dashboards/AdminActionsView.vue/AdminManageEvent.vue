@@ -2,7 +2,7 @@
   <main class="container py-4">
     <h1 class="mb-4 text-center">Admin Event Management</h1>
 
-    <div class="card p-3 shadow-sm">
+    <div class="card p-3 shadow-sm d-flex flex-column">
       <!-- Search Bar -->
       <div class="mb-3">
         <span class="p-input-icon-left">

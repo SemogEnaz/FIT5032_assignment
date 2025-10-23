@@ -22,10 +22,10 @@
             <span class="tile__desc">Create, edit, and delete blog posts.</span>
           </RouterLink>
 
-          <RouterLink class="tile" to="/admin/users" aria-label="Manage Users">
-            <span class="tile__emoji" aria-hidden="true">👥</span>
-            <span class="tile__title">Manage Users</span>
-            <span class="tile__desc">Edit roles or delete users.</span>
+          <RouterLink class="tile" to="/admin/manageEvents" aria-label="Manage Users">
+            <span class="tile__emoji" aria-hidden="true">🔎</span>
+            <span class="tile__title">Manage Events</span>
+            <span class="tile__desc">Search or edit events</span>
           </RouterLink>
         </nav>
       </div>

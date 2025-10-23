@@ -145,10 +145,14 @@ exports.getRecentEvents = onRequest((req, res) => {
           .limit(3)
           .get();
 
-      const events = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      const events = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          start: data.start.toDate().toISOString(),
+        };
+      });
 
       res.status(200).send({ success: true, events });
     } catch (error) {
@@ -211,11 +215,6 @@ exports.getRecentBlogs = onRequest((req, res) => {
     }
   });
 });
-
-// Import SendGrid mail library
-const sgMail = require("@sendgrid/mail");
-// Set your SendGrid API key (store it securely e.g. in Functions config)
-sgMail.setApiKey('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');
 
 exports.sendWelcomeEmail = onRequest((req, res) => {
   cors(req, res, async () => {
@@ -509,6 +508,55 @@ exports.getEventRating = onRequest((req, res) => {
     } catch (error) {
       console.error("🔥 Error fetching rating:", error);
       res.status(500).send({ success: false, message: error.message });
+    }
+  });
+});
+
+exports.deleteEvent = onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      // ✅ Allow only POST requests
+      if (req.method !== "POST") {
+        return res.status(405).send({ success: false, message: "Method Not Allowed" });
+      }
+
+      const { eventId } = req.body;
+      if (!eventId) {
+        return res.status(400).send({ success: false, message: "Missing eventId" });
+      }
+
+      const db = admin.firestore();
+      const eventRef = db.collection("events").doc(eventId);
+
+      // ✅ Check if event exists
+      const eventSnap = await eventRef.get();
+      if (!eventSnap.exists) {
+        return res.status(404).send({ success: false, message: "Event not found" });
+      }
+
+      // ✅ Delete nested subcollections (registrations, ratings)
+      const subcollections = await eventRef.listCollections();
+      for (const sub of subcollections) {
+        const subDocs = await sub.listDocuments();
+        for (const doc of subDocs) {
+          await doc.delete();
+        }
+      }
+
+      // ✅ Delete main event document
+      await eventRef.delete();
+
+      console.log(`🗑️ Event ${eventId} deleted successfully`);
+      return res.status(200).send({
+        success: true,
+        message: `Event ${eventId} deleted successfully.`,
+      });
+    } catch (error) {
+      console.error("🔥 Error deleting event:", error);
+      return res.status(500).send({
+        success: false,
+        message: "Error deleting event: " + error.message,
+      });
     }
   });
 });
