@@ -7,9 +7,7 @@
       <ul class="nav nav-pills nav-justified px-3">
         <li class="nav-item"><RouterLink class="nav-link" to="/">Home</RouterLink></li>
         <li class="nav-item"><RouterLink class="nav-link" to="/events">Events</RouterLink></li>
-        <li class="nav-item"><RouterLink class="nav-link" to="/blog">Blog</RouterLink></li>
         <li class="nav-item"><RouterLink class="nav-link" to="/admin">AdminDashboard</RouterLink></li>
-        <li class="nav-item"><RouterLink class="nav-link" to="/UserDashboard">UserDashboard</RouterLink></li>
 
         <!-- AUTH SLOT -->
         <li class="nav-item" @click="logout" v-if="isLoggedIn">

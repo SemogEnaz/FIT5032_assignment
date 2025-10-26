@@ -17,7 +17,7 @@
     </div>
 
     <!-- Event List -->
-    <section v-else class="container">
+    <section v-else class="container mt-5">
       <div class="row g-3">
         <div v-for="e in filtered" :key="e.id" class="col-12 col-md-6">
           <div class="card h-100 d-flex">
@@ -46,8 +46,28 @@
               </p>
               <p class="mb-3 mx-2">{{ e.summary }}</p>
 
-              <button class="btn btn-dark btn-sm" @click="registerForEvent(e.id)">
+              <button
+                v-if="!e.userStatus"
+                class="btn btn-dark btn-sm"
+                @click="handleEventAction(e)"
+              >
                 Register
+              </button>
+
+              <button
+                v-else-if="e.userStatus === 'registered'"
+                class="btn btn-warning btn-sm"
+                @click="handleEventAction(e)"
+              >
+                Mark Attendance
+              </button>
+
+              <button
+                v-else-if="e.userStatus === 'attended'"
+                class="btn btn-success btn-sm"
+                disabled
+              >
+                Event Attended
               </button>
 
               <!-- Rating widget component -->
@@ -88,6 +108,7 @@ const error = ref(null);
 
 onMounted(async () => {
   await getEvents();
+  await syncUserStatuses(); // ✅ sync registration state immediately
   initMap();
 });
 
@@ -97,11 +118,11 @@ async function getEvents() {
       "https://getrecentevents-5bgqwovi2q-uc.a.run.app"
     );
     if (res.data?.success && Array.isArray(res.data.events)) {
-      // 🔹 If the event doesn’t have ratings, default to 0
       events.value = res.data.events.map((e) => ({
         ...e,
         avgRating: e.avgRating || 0,
         ratingCount: e.ratingCount || 0,
+        userStatus: null, // 👈 placeholder until we sync
       }));
     } else {
       throw new Error("Unexpected API response");
@@ -112,6 +133,30 @@ async function getEvents() {
   }
 }
 
+/**
+ * ✅ Fetch the user's registration status for all events after load
+ */
+async function syncUserStatuses() {
+  const user = JSON.parse(localStorage.getItem("sessionUser"));
+  if (!user || !user.id) return;
+
+  try {
+    for (const e of events.value) {
+      const res = await axios.post(
+        "https://geteventregistrationstatus-5bgqwovi2q-uc.a.run.app",
+        { eventId: e.id, uid: user.id },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      e.userStatus = res.data?.status || null;
+    }
+  } catch (err) {
+    console.error("⚠️ Error syncing user statuses:", err);
+  }
+}
+
+/**
+ * 🗺️ Initialize map
+ */
 function initMap() {
   mapInstance = new mapboxgl.Map({
     container: "map",
@@ -123,7 +168,6 @@ function initMap() {
   mapInstance.addControl(new mapboxgl.NavigationControl());
 
   mapInstance.on("load", () => {
-    console.log("🗺️ Map loaded");
     addMarkers(events.value);
   });
 }
@@ -170,36 +214,6 @@ const filtered = computed(() => {
     .sort((a, b) => new Date(a.start) - new Date(b.start));
 });
 
-const registering = ref(false);
-
-async function registerForEvent(eventId) {
-  const user = JSON.parse(localStorage.getItem("sessionUser"));
-  if (!user || !user.email) {
-    alert("Please log in to register for events.");
-    return;
-  }
-
-  registering.value = true;
-  try {
-    const res = await axios.post(
-      "https://registerforevent-5bgqwovi2q-uc.a.run.app",
-      {
-        eventId,
-        uid: user.id,
-        email: user.email,
-      }
-    );
-
-    console.log("✅ Registration success:", res.data);
-    alert(`You are registered for "${res.data.title || "this event"}"!`);
-  } catch (err) {
-    console.error("❌ Registration failed:", err);
-    alert("Failed to register. Please try again.");
-  } finally {
-    registering.value = false;
-  }
-}
-
 function day(iso) {
   return new Date(iso).getDate().toString().padStart(2, "0");
 }
@@ -207,6 +221,52 @@ function mon(iso) {
   return new Date(iso)
     .toLocaleString(undefined, { month: "short" })
     .toUpperCase();
+}
+
+/**
+ * 🧭 Handle Register / Attendance actions
+ */
+async function handleEventAction(event) {
+  const user = JSON.parse(localStorage.getItem("sessionUser"));
+  if (!user) {
+    alert("Please log in to perform this action.");
+    return;
+  }
+
+  let action = "";
+  if (!event.userStatus) action = "register";
+  else if (event.userStatus === "registered") action = "attend";
+  else return; // already attended
+
+  console.log("📤 Sending:", {
+    eventId: event.id,
+    uid: user.id,
+    email: user.email,
+    action,
+  });
+
+  try {
+    const res = await axios.post(
+      "https://registerorattendevent-5bgqwovi2q-uc.a.run.app",
+      {
+        eventId: event.id,
+        uid: user.id,
+        email: user.email,
+        action,
+      },
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+    if (res.data.success) {
+      event.userStatus = res.data.status; // ✅ immediately update local state
+      alert(res.data.message);
+    } else {
+      alert(res.data.message);
+    }
+  } catch (err) {
+    console.error("❌ Event action failed:", err);
+    alert("Error performing action. Please try again.");
+  }
 }
 
 function updateEventRating({ eventId, avgRating, ratingCount }) {
@@ -217,6 +277,7 @@ function updateEventRating({ eventId, avgRating, ratingCount }) {
   }
 }
 </script>
+
 
 <style scoped>
 .text-warning {

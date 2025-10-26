@@ -34,29 +34,6 @@
       </div>
     </section>
 
-    <!-- BLOG HIGHLIGHT (latest) -->
-    <section class="section blog">
-      <div class="container">
-        <div class="section__header">
-          <h2 class="section__title">From the Blog</h2>
-          <router-link class="link-more" to="/blog">Browse all posts →</router-link>
-        </div>
-
-        <article v-if="latestPost" class="post">
-          <img v-if="latestPost.cover" :src="latestPost.cover" class="post__img" :alt="latestPost.title"/>
-          <div class="post__body">
-            <h3 class="post__title">{{ latestPost.title }}</h3>
-            <p class="post__meta">{{ formatLongDate(latestPost.date) }}</p>
-            <p class="post__excerpt">{{ latestPost.excerpt || "" }}</p>
-            <router-link class="btn btn--sm" :to="`/blog/${latestPost.slug}`">Read more</router-link>
-          </div>
-        </article>
-
-        <div v-else class="empty">
-          <p>No blog posts yet. Stay tuned!</p>
-        </div>
-      </div>
-    </section>
   </main>
 </template>
 
@@ -95,32 +72,12 @@ const events = [
     }
 ];
 
-const posts = [
-    {
-    slug: 'season-kickoff',
-    title: 'Season Kickoff: What to Expect',
-    date: new Date().toISOString(),
-    excerpt: 'New fixtures, coaching programs, and social nights—here’s what’s coming.',
-    cover: 'https://images.unsplash.com/photo-1516541196182-6bdb0516ed27?q=80&w=1600&auto=format&fit=crop'
-    }
-]
-
 const topEvents = computed(() => {
   return (events || [])
     .slice()
     .sort((a, b) => new Date(a.start) - new Date(b.start))
     .slice(0, 3)
-})
-
-const latestPost = computed(() => {
-  if (!posts || posts.length === 0) return null
-  return posts.slice().sort((a, b) => new Date(b.date) - new Date(a.date))[0]
-})
-
-function formatLongDate(iso) {
-  const d = new Date(iso)
-  return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
-}
+});
 
 </script>
 

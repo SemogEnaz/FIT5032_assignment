@@ -16,12 +16,6 @@
             <span class="tile__desc">Add new events to the club calendar.</span>
           </RouterLink>
 
-          <RouterLink class="tile" to="/admin/blog" aria-label="Manage Blog">
-            <span class="tile__emoji" aria-hidden="true">✍️</span>
-            <span class="tile__title">Manage Blog</span>
-            <span class="tile__desc">Create, edit, and delete blog posts.</span>
-          </RouterLink>
-
           <RouterLink class="tile" to="/admin/manageEvents" aria-label="Manage Users">
             <span class="tile__emoji" aria-hidden="true">🔎</span>
             <span class="tile__title">Manage Events</span>

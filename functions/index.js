@@ -570,3 +570,127 @@ exports.deleteEvent = onRequest((req, res) => {
     }
   });
 });
+
+exports.registerOrAttendEvent = onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      if (req.method !== "POST") {
+        return res.status(405).send("Method Not Allowed");
+      }
+
+      const { eventId, uid, email, action } = req.body;
+      if (!eventId || !uid || !email || !action) {
+        return res.status(400).send({
+          success: false,
+          message: "Missing eventId, uid, email, or action",
+        });
+      }
+
+      const db = admin.firestore();
+      const eventRef = db.collection("events").doc(eventId);
+      const regRef = eventRef.collection("registrations").doc(uid);
+
+      // Check if the registration already exists
+      const regSnap = await regRef.get();
+
+      if (action === "register") {
+        if (regSnap.exists) {
+          return res.status(400).send({
+            success: false,
+            message: "User already registered for this event",
+          });
+        }
+
+        // Create registration
+        await regRef.set({
+          uid,
+          email,
+          status: "registered",
+          registeredAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        // Increment event "interest" count
+        await eventRef.set(
+            { interest: admin.firestore.FieldValue.increment(1) },
+            { merge: true }
+        );
+
+
+        return res.status(200).send({
+          success: true,
+          message: "User registered successfully",
+          status: "registered",
+        });
+      }
+
+      if (action === "attend") {
+        if (!regSnap.exists) {
+          return res.status(400).send({
+            success: false,
+            message: "User is not registered for this event",
+          });
+        }
+
+        const currentData = regSnap.data();
+        if (currentData.status === "attended") {
+          return res.status(400).send({
+            success: false,
+            message: "User already marked attendance",
+          });
+        }
+
+        // Mark attendance
+        await regRef.update({
+          status: "attended",
+          attendedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        // Increment attendance field
+        await eventRef.set(
+            { attendance: admin.firestore.FieldValue.increment(1) },
+            { merge: true }
+        );
+
+        return res.status(200).send({
+          success: true,
+          message: "Attendance marked successfully",
+          status: "attended",
+        });
+      }
+
+      res.status(400).send({ success: false, message: "Invalid action" });
+    } catch (error) {
+      console.error("🔥 Error registering/attending event:", error);
+      res.status(500).send({
+        success: false,
+        message: "Error registering or marking attendance: " + error.message,
+      });
+    }
+  });
+});
+
+exports.getEventRegistrationStatus = onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      const { eventId, uid } = req.body;
+      if (!eventId || !uid) return res.status(400).send({ success: false, message: "Missing fields" });
+
+      const regRef = admin
+          .firestore()
+          .collection("events")
+          .doc(eventId)
+          .collection("registrations")
+          .doc(uid);
+
+      const regSnap = await regRef.get();
+      if (!regSnap.exists) return res.status(200).send({ success: true, status: null });
+
+      res.status(200).send({
+        success: true,
+        status: regSnap.data().status,
+      });
+    } catch (error) {
+      res.status(500).send({ success: false, message: error.message });
+    }
+  });
+});
