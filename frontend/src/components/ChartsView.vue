@@ -36,7 +36,7 @@ const jsonData = ref([])
 const selectedMetric = ref('attendance') // 👈 default metric
 
 onMounted(async () => {
-  const res = await fetch('https://getrecentattendance-5bgqwovi2q-uc.a.run.app')
+  const res = await fetch('https://getchartdata-5bgqwovi2q-uc.a.run.app')
   const json = await res.json()
   jsonData.value = json.data || []
   console.log(json.data)
