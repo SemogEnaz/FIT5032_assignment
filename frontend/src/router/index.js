@@ -8,9 +8,11 @@ import AdminDashView from '@/pages/Dashboard/AdminDashView.vue';
 import AdminEvents from '@/pages/Dashboard/AdminActionsView.vue/AdminEvents.vue';
 import AdminManageEvent from '@/pages/Dashboard/AdminActionsView.vue/AdminManageEvent.vue';
 import GetEventAPI from '@/pages/API/GetEventAPI.vue';
+import MapView from "@/pages/MapView.vue";
 
 const routes = [
     { path: '/events', name: "events", component: EventView},
+    { path: '/map', name: "map", component: MapView},
     { path: '/loginRegister', name: "loginregister", component: LoginRegisterView},
 
     { path: '/admin', name: 'AdminHome', component: AdminDashView },

@@ -469,3 +469,84 @@ exports.populateMockEvents = onRequest((req, res) => {
     }
   });
 });
+
+exports.getUpcomingEvents = onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      const db = admin.firestore();
+      const now = new Date();
+
+      const snapshot = await db
+          .collection("events")
+          .where("start", ">=", admin.firestore.Timestamp.fromDate(now))
+          .orderBy("start", "asc")
+          .limit(5)
+          .get();
+
+      if (snapshot.empty) {
+        return res.status(200).json({ success: true, events: [] });
+      }
+
+      const events = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          start: data.start.toDate().toISOString(),
+        };
+      });
+
+      return res.status(200).json({
+        success: true,
+        events,
+      });
+    } catch (error) {
+      console.error("🔥 Error fetching upcoming events:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Error fetching upcoming events: " + error.message,
+      });
+    }
+  });
+});
+
+exports.getPastEvents = onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      const db = admin.firestore();
+      const now = new Date();
+
+      const snapshot = await db
+          .collection("events")
+          .where("start", "<", admin.firestore.Timestamp.fromDate(now))
+          .orderBy("start", "desc")
+          .limit(5)
+          .get();
+
+      if (snapshot.empty) {
+        return res.status(200).json({ success: true, events: [] });
+      }
+
+      const events = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          start: data.start.toDate().toISOString(),
+        };
+      });
+
+      return res.status(200).json({
+        success: true,
+        events,
+      });
+    } catch (error) {
+      console.error("🔥 Error fetching past events:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Error fetching past events: " + error.message,
+      });
+    }
+  });
+});
+

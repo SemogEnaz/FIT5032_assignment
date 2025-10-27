@@ -22,6 +22,8 @@ const {
   registerOrAttendEvent,
   getEventRegistrationStatus,
   populateMockEvents,
+  getUpcomingEvents,
+  getPastEvents,
 } = require('./src/event');
 
 const {
@@ -52,6 +54,8 @@ exports.deleteEvent = deleteEvent;
 exports.registerOrAttendEvent = registerOrAttendEvent;
 exports.getEventRegistrationStatus = getEventRegistrationStatus;
 exports.populateMockEvents = populateMockEvents;
+exports.getUpcomingEvents = getUpcomingEvents;
+exports.getPastEvents = getPastEvents;
 
 // Chart
 exports.getChartData = getChartData;

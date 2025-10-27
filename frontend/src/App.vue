@@ -4,17 +4,10 @@
 
     <nav class="mt-3 w-100">
       <ul class="nav nav-pills nav-justified px-3 flex-wrap">
-        <li class="nav-item">
-          <RouterLink class="nav-link" to="/">Home</RouterLink>
-        </li>
-        <li class="nav-item">
-          <RouterLink class="nav-link" to="/events">Events</RouterLink>
-        </li>
-
-        <!-- 👇 Show only if logged in and role is admin -->
-        <li v-if="isAdmin" class="nav-item">
-          <RouterLink class="nav-link" to="/admin">Admin Dashboard</RouterLink>
-        </li>
+        <li class="nav-item"><RouterLink class="nav-link" to="/">Home</RouterLink></li>
+        <li class="nav-item"><RouterLink class="nav-link" to="/events">Past Events</RouterLink></li>
+        <li class="nav-item"><RouterLink class="nav-link" to="/map">Upcoming Events</RouterLink></li>
+        <li v-if="isAdmin" class="nav-item"><RouterLink class="nav-link" to="/admin">Admin Dashboard</RouterLink> </li>
 
         <!-- AUTH SLOT -->
         <li v-if="isLoggedIn" class="nav-item">
