@@ -1,7 +1,7 @@
 <template>
   <main class="admin-home py-4">
     <!-- Header -->
-    <section class="container text-center mb-4">
+    <section class="container text-center mb-2">
       <h1 class="mb-2">Admin</h1>
       <p class="text-muted mb-0">Choose a task to get started.</p>
     </section>
