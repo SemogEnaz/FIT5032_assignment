@@ -8,32 +8,6 @@
 
     <About :aboutText="aboutText" />
 
-    <!-- EVENTS HIGHLIGHT (3 cards) -->
-    <section class="section events">
-      <div class="container">
-        <div class="section__header">
-          <h2 class="section__title">Upcoming Events</h2>
-          <router-link class="link-more" to="/events">View all events →</router-link>
-        </div>
-
-        <div class="cards">
-          <article v-for="event in topEvents" :key="event.id" class="card">
-            <EventCard 
-                :start="event.start"
-                :title="event.title"
-                :location="event.location"
-                :summary="events.summary"
-                :id="events.id"/>
-          </article>
-
-          <!-- Empty state -->
-          <div v-if="topEvents.length === 0" class="empty">
-            <p>No upcoming events yet. Check back soon!</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
   </main>
 </template>
 
@@ -41,7 +15,6 @@
 import { computed } from 'vue';
 import About from '../components/About.vue';
 import Hero from '../components/Hero.vue';
-import EventCard from '../components/EventCard.vue';
 
 const heroImg = 'https://quedos.com.au/wp-content/uploads/2022/07/man-playing-billiards.jpg';
 const ctaTitle = 'Join the Club — Play, Learn, Compete';

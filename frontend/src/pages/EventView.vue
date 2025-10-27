@@ -16,50 +16,17 @@
     <!-- Event List -->
     <section v-else class="container mt-5">
       <div class="row g-3">
-        <div v-for="e in filtered" :key="e.id" class="col-12 col-md-6">
-          <div class="card h-100 d-flex">
-            <div class="card-body">
-              <div class="d-flex align-items-center mb-2 justify-content-between">
-                <div class="d-flex align-items-center">
-                  <div
-                    class="text-center bg-dark text-white rounded p-2 me-3"
-                    style="min-width:68px;"
-                  >
-                    <div class="fw-bold fs-5">{{ day(e.start) }}</div>
-                    <div class="small">{{ mon(e.start) }}</div>
-                  </div>
-                  <h5 class="mb-0">{{ e.title }}</h5>
-                </div>
-
-                <!-- ⭐ Rating display -->
-                <div v-if="e.avgRating" class="text-warning small">
-                  ★ {{ e.avgRating.toFixed(1) }} ({{ e.ratingCount }})
-                </div>
-                <div v-else class="text-muted small">No ratings</div>
-              </div>
-
-              <p class="text-muted mb-2">
-                📍 {{ e.street }}, {{ e.suburb }}, {{ e.state }}
-              </p>
-              <p class="mb-3 mx-2">{{ e.summary }}</p>
-
-              <EventRegistrationButton :event="e" @updated="syncEventStatus" />
-
-              <!-- Rating widget component -->
-              <RatingWidget
-                :item-id="e.id"
-                kind="event"
-                class="mt-3"
-                @rated="updateEventRating"
-              />
-            </div>
-          </div>
-        </div>
-
         <div v-if="filtered.length === 0" class="col-12">
           <div class="border rounded p-4 text-center text-secondary">
             No events found.
           </div>
+        </div>
+        <div v-else v-for="e in filtered" :key="e.id" class="col-12 col-md-6">
+          <EventCard
+            :event="e"
+            @rated="updateEventRating"
+            @updated="syncUserStatuses"
+          />
         </div>
       </div>
     </section>
@@ -67,10 +34,9 @@
 </template>
 
 <script setup>
-import EventRegistrationButton from "@/components/EventRegistrationButton.vue";
-import RatingWidget from "../components/RatingWidget.vue";
 import axios from "axios";
 import { ref, computed, onMounted } from "vue";
+import EventCard from "@/components/EventCard.vue";
 
 const q = ref("");
 const month = ref("");
@@ -140,15 +106,6 @@ const filtered = computed(() => {
     })
     .sort((a, b) => new Date(a.start) - new Date(b.start));
 });
-
-function day(iso) {
-  return new Date(iso).getDate().toString().padStart(2, "0");
-}
-function mon(iso) {
-  return new Date(iso)
-    .toLocaleString(undefined, { month: "short" })
-    .toUpperCase();
-}
 
 function updateEventRating({ eventId, avgRating, ratingCount }) {
   const event = events.value.find((e) => e.id === eventId);
