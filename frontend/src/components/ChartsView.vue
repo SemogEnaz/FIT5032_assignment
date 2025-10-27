@@ -1,12 +1,10 @@
 <template>
-  <div class="container mt-4">
+  <div class="container mt-4 chart-container">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 gap-2">
       <h3 class="text-center text-md-start mb-0">Event Metrics</h3>
       <p class="text-center">Attendance and interest by users for last 5 and upcoming 5 events including today</p>
 
-      <!-- Toggle buttons -->
       <div class="btn-group mx-auto mx-md-0 d-flex">
-        <!-- 🔵 Overall -->
         <button
           class="btn btn-outline-primary"
           :class="{ active: selectedMetric === 'overall' }"
@@ -14,7 +12,6 @@
         >
           Overall
         </button>
-        <!-- 🟢 Attendance -->
         <button
           class="btn btn-outline-success"
           :class="{ active: selectedMetric === 'attendance' }"
@@ -22,7 +19,6 @@
         >
           Attendance
         </button>
-        <!-- 🟡 Interest -->
         <button
           class="btn btn-outline-warning"
           :class="{ active: selectedMetric === 'interest' }"
@@ -144,6 +140,7 @@ function renderChart() {
     data: { labels, datasets },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       scales: {
         x: {
@@ -168,3 +165,18 @@ function renderChart() {
   })
 }
 </script>
+
+<style scoped>
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 300px; /* default height */
+}
+
+@media (max-width: 576px) {
+  .chart-container {
+    min-height: 300px; /* phone screens */
+  }
+}
+
+</style>

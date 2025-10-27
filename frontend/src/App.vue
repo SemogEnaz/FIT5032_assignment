@@ -3,8 +3,8 @@
     <h1 class="mt-3 text-center">Clayton Pool Association</h1>
 
     <nav class="mt-3 w-100">
-      <ul class="nav nav-pills nav-justified px-3 flex-wrap">
-        <li class="nav-item"><RouterLink class="nav-link" to="/">Home</RouterLink></li>
+      <ul   class="nav nav-pills nav-justified px-3 flex-wrap flex-column flex-sm-row text-center gap-1 gap-sm-0">
+        <li class="nav-item"><RouterLink class="nav-link font-md-1" to="/">Home</RouterLink></li>
         <li class="nav-item"><RouterLink class="nav-link" to="/events">Past Events</RouterLink></li>
         <li class="nav-item"><RouterLink class="nav-link" to="/map">Upcoming Events</RouterLink></li>
         <li v-if="isAdmin" class="nav-item"><RouterLink class="nav-link" to="/admin">Admin Dashboard</RouterLink> </li>

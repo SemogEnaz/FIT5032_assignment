@@ -1,9 +1,9 @@
 <template>
-  <main class="container py-4">
+  <main class="container">
 
-    <div class="container position-relative my-4">
-      <RouterLink to="/admin" class="link position-absolute start-0 top-50 translate-middle-y fw-semibold text-decoration-none">← Admin home</RouterLink>
-      <h1 class="text-center mb-0">Admin Event Management</h1>
+    <div class="container d-flex flex-column flex-md-row align-items-center justify-content-center mb-3">
+      <h1 class="text-center mb-2">Event Management</h1>
+      <RouterLink to="/admin" class="link fw-semibold text-decoration-none">← Admin home</RouterLink>
     </div>
 
     <div class="card p-3 shadow-sm d-flex flex-column">

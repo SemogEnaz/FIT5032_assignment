@@ -1,13 +1,9 @@
 <template>
   <main class="container admin-events py-4">
-    <div class="position-relative my-4">
-      <RouterLink
-        to="/admin"
-        class="link position-absolute start-0 top-50 translate-middle-y fw-semibold text-decoration-none"
-      >
-        ← Admin home
-      </RouterLink>
-      <h1 class="text-center mb-0">Create Event</h1>
+
+    <div class="container d-flex flex-column flex-md-row align-items-center justify-content-center mb-3">
+      <h1 class="text-center mb-2">Create Events</h1>
+      <RouterLink to="/admin" class="link fw-semibold text-decoration-none">← Admin home</RouterLink>
     </div>
 
     <section class="section">
@@ -53,7 +49,6 @@
         </form>
       </div>
 
-      <!-- 🔮 Live Preview -->
       <div v-if="showPreview" class="mt-4 p-3 border rounded bg-light">
         <h5 class="mb-3 text-center text-muted">Event Preview</h5>
         <EventCard

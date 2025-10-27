@@ -33,6 +33,7 @@ const {
 const {
   getLatLngFromAddress,
   getMapData,
+  getDrivingDistance,
 } = require('./src/mapbox');
 
 const {
@@ -64,6 +65,7 @@ exports.getChartData = getChartData;
 // Mapbox
 exports.getLatLngFromAddress = getLatLngFromAddress;
 exports.getMapData = getMapData;
+exports.getDrivingDistance = getDrivingDistance;
 
 // Email
 exports.sendWelcomeEmail = sendWelcomeEmail;

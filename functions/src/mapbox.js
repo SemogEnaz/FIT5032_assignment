@@ -113,3 +113,34 @@ exports.getMapData = onRequest((req, res) => {
     }
   });
 });
+
+exports.getDrivingDistance = onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      if (req.method !== "POST") {
+        return res.status(405).send("Method Not Allowed");
+      }
+
+      const { origin, destination } = req.body;
+      if (!origin || !destination) {
+        return res.status(400).send({ success: false, message: "Missing coordinates" });
+      }
+
+      const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}?overview=false&access_token=${MAPBOX_TOKEN}`;
+
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (!data.routes.length) {
+        return res.status(404).send({ success: false, message: "No route found" });
+      }
+
+      const distanceKm = data.routes[0].distance / 1000; // convert meters → km
+
+      res.status(200).send({ success: true, distanceKm });
+    } catch (error) {
+      console.error("Error fetching driving distance:", error);
+      res.status(500).send({ success: false, message: error.message });
+    }
+  });
+});
