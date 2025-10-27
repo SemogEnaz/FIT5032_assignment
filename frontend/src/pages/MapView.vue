@@ -16,10 +16,10 @@
       {{ error }}
     </div>
 
-    <div class="container mt-4">
-    <h3 class="mb-3">Nearby Events</h3>
+    <div class="mt-5">
+    <h3 class="mb-3 d-flex justify-content-center">Nearby Events</h3>
 
-    <DataTable :value="events" paginator :rows="5" responsiveLayout="scroll">
+    <DataTable :value="events" paginator :rows="5" responsiveLayout="scroll" class="w-100">
       <Column field="date" header="Date">
         <template #body="{ data }">{{ formatDate(data.start) }}</template>
       </Column>
