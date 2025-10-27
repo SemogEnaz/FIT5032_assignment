@@ -72,7 +72,7 @@ async function handleAction(action) {
       "https://registerorattendevent-5bgqwovi2q-uc.a.run.app",
       {
         eventId: props.event.id,
-        uid: user.id,
+        uid: user.uid,
         email: user.email,
         action,
       },
