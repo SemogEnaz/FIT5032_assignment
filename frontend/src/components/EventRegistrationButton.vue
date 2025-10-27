@@ -1,35 +1,37 @@
 <template>
   <div>
-    <!-- 🔒 Event in the past & not registered -->
-        <button
+    <button
       v-if="isPast && !event.userStatus"
       class="btn btn-secondary btn-sm w-100"
       disabled
-      title="Registration closed for past events"
     >
       Event Closed
     </button>
 
-
-    <!-- 🕒 Not registered yet -->
     <button
-      v-else-if="!event.userStatus"
+      v-else-if="!event.userStatus && !isPast"
       class="btn btn-dark btn-sm w-100"
       @click="handleAction('register')"
     >
       Register
     </button>
 
-    <!-- 🟡 Registered but not attended -->
+    <RouterLink
+      v-else-if="isUpcoming && event.userStatus === 'registered'"
+      to="/events"
+      class="btn btn-outline-primary btn-sm w-100 text-decoration-none"
+    >
+      Registered ✓
+    </RouterLink>
+
     <button
-      v-else-if="event.userStatus === 'registered'"
+      v-else-if="isPast && event.userStatus === 'registered'"
       class="btn btn-warning btn-sm w-100"
       @click="handleAction('attend')"
     >
       Mark Attendance
     </button>
 
-    <!-- 🟢 Attended -->
     <button
       v-else-if="event.userStatus === 'attended'"
       class="btn btn-success btn-sm w-100"
@@ -43,22 +45,18 @@
 <script setup>
 import axios from "axios";
 import { computed, defineProps, defineEmits } from "vue";
+import { RouterLink } from "vue-router";
 
 const props = defineProps({
-  event: {
-    type: Object,
-    required: true,
-  },
+  event: { type: Object, required: true },
 });
 
 const emit = defineEmits(["updated"]);
 
-// ✅ Determine if event date has passed
-const isPast = computed(() => {
-  const now = new Date();
-  const eventDate = new Date(props.event.start);
-  return eventDate < now;
-});
+const now = new Date();
+
+const isPast = computed(() => new Date(props.event.start) < now);
+const isUpcoming = computed(() => new Date(props.event.start) > now);
 
 async function handleAction(action) {
   const user = JSON.parse(localStorage.getItem("sessionUser"));
@@ -67,7 +65,6 @@ async function handleAction(action) {
     return;
   }
 
-  // prevent marking attendance twice
   if (props.event.userStatus === "attended") return;
 
   try {
@@ -83,6 +80,7 @@ async function handleAction(action) {
     );
 
     if (res.data.success) {
+      // eslint-disable-next-line vue/no-mutating-props
       props.event.userStatus = res.data.status;
       emit("updated", { id: props.event.id, status: res.data.status });
       alert(res.data.message);
@@ -97,10 +95,12 @@ async function handleAction(action) {
 </script>
 
 <style scoped>
-button {
-  transition: transform 0.1s ease-in-out, background-color 0.15s ease-in-out;
+button,
+a.btn {
+  transition: background-color 0.15s ease, transform 0.1s ease-in-out;
 }
-button:hover:not(:disabled) {
+button:hover:not(:disabled),
+a.btn:hover {
   transform: scale(1.02);
 }
 </style>
