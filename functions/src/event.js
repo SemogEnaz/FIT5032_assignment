@@ -398,68 +398,55 @@ exports.populateMockEvents = onRequest((req, res) => {
       const db = admin.firestore();
       const eventsRef = db.collection("events");
 
-      // Example Melbourne-based mock data
-      const locations = [
-        { street: "123 Lygon St", suburb: "Carlton", state: "VIC", lat: -37.8002, lng: 144.966 },
-        { street: "45 Swanston St", suburb: "Melbourne", state: "VIC", lat: -37.818, lng: 144.967 },
-        { street: "78 Chapel St", suburb: "Prahran", state: "VIC", lat: -37.851, lng: 144.993 },
-        { street: "12 Glenferrie Rd", suburb: "Hawthorn", state: "VIC", lat: -37.821, lng: 145.035 },
-        { street: "90 Bay St", suburb: "Port Melbourne", state: "VIC", lat: -37.839, lng: 144.94 },
+      // ✅ Delete all existing events
+      const existing = await eventsRef.listDocuments();
+      for (const doc of existing) await doc.delete();
+      console.log(`🗑️ Deleted ${existing.length} old events.`);
+
+      const today = new Date();
+      const mockEvents = [];
+      const suburbs = [
+        "Clayton",
+        "Glen Waverley",
+        "Richmond",
+        "Docklands",
+        "Carlton",
+        "St Kilda",
       ];
 
-      const now = new Date();
+      // Helper to format dates relative to today
+      // eslint-disable-next-line require-jsdoc, no-inner-declarations
+      function addDays(days) {
+        const d = new Date(today);
+        d.setDate(today.getDate() + days);
+        return d;
+      }
 
-      const mockEvents = [];
-
-      // Create 5 past events (within the last 10 days)
-      for (let i = 0; i < 5; i++) {
-        const date = new Date(now);
-        date.setDate(now.getDate() - (i + 2)); // 2–6 days ago
-        const loc = locations[i % locations.length];
+      for (let i = -5; i <= 5; i++) {
+        const startDate = addDays(i);
+        const suburb = suburbs[Math.floor(Math.random() * suburbs.length)];
+        const attendance = Math.floor(Math.random() * 30);
+        const interest = attendance + Math.floor(Math.random() * 10);
+        const lat = -37.8 + Math.random() * 0.1;
+        const lng = 144.9 + Math.random() * 0.1;
 
         mockEvents.push({
-          title: `Past Event ${i + 1}`,
-          summary: `A fun past event held recently in ${loc.suburb}.`,
-          start: admin.firestore.Timestamp.fromDate(date),
-          street: loc.street,
-          suburb: loc.suburb,
-          state: loc.state,
-          lat: loc.lat,
-          lng: loc.lng,
+          title: i === 0 ? "Community Meet" : `Mock Event ${i + 6}`,
+          summary: i === 0 ? "Today's big social meet for all members!" : "A casual community event featuring pool, snacks, and socializing.",
+          start: admin.firestore.Timestamp.fromDate(startDate),
+          street: `${10 + Math.floor(Math.random() * 100)} Main St`,
+          suburb,
+          state: "VIC",
           image: "",
-          attendance: Math.floor(Math.random() * 30) + 10, // 10–40
-          interest: Math.floor(Math.random() * 50) + 20, // 20–70
-          avgRating: +(Math.random() * 2 + 3).toFixed(1), // 3.0–5.0
-          ratingCount: Math.floor(Math.random() * 10) + 1,
+          lat,
+          lng,
+          attendance,
+          interest,
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
       }
 
-      // Create 5 upcoming events (within the next 10 days)
-      for (let i = 0; i < 5; i++) {
-        const date = new Date(now);
-        date.setDate(now.getDate() + (i + 1)); // 1–5 days ahead
-        const loc = locations[i % locations.length];
-
-        mockEvents.push({
-          title: `Upcoming Event ${i + 1}`,
-          summary: `An exciting event happening soon in ${loc.suburb}!`,
-          start: admin.firestore.Timestamp.fromDate(date),
-          street: loc.street,
-          suburb: loc.suburb,
-          state: loc.state,
-          lat: loc.lat,
-          lng: loc.lng,
-          image: "",
-          attendance: Math.floor(Math.random() * 20), // 0–20
-          interest: Math.floor(Math.random() * 80) + 10, // 10–90
-          avgRating: 0,
-          ratingCount: 0,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-      }
-
-      // Upload all mock events
+      // ✅ Batch add mock events
       const batch = db.batch();
       mockEvents.forEach((e) => {
         const ref = eventsRef.doc();
@@ -468,16 +455,16 @@ exports.populateMockEvents = onRequest((req, res) => {
 
       await batch.commit();
 
+      console.log(`✅ Added ${mockEvents.length} mock events.`);
       res.status(200).send({
         success: true,
-        count: mockEvents.length,
-        message: "✅ Successfully populated 10 mock events!",
+        message: `${mockEvents.length} mock events created.`,
       });
     } catch (error) {
       console.error("🔥 Error populating mock events:", error);
       res.status(500).send({
         success: false,
-        message: error.message,
+        message: "Error populating mock events: " + error.message,
       });
     }
   });

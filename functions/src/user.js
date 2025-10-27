@@ -42,7 +42,6 @@ exports.createUser = onRequest((req, res) => {
 exports.getUserProfile = onRequest((req, res) => {
   cors(req, res, async () => {
     try {
-      // Only allow POST for security
       if (req.method !== 'POST') {
         return res.status(405).send('Method Not Allowed');
       }
@@ -52,7 +51,6 @@ exports.getUserProfile = onRequest((req, res) => {
         return res.status(400).send('Missing user UID');
       }
 
-      // Retrieve user document from Firestore
       const userRef = admin.firestore().collection('users').doc(uid);
       const snap = await userRef.get();
 
@@ -62,13 +60,58 @@ exports.getUserProfile = onRequest((req, res) => {
 
       const data = snap.data();
 
-      // Optionally sanitize what you return (never send sensitive fields)
-      delete data.password;
+      // Ensure uid is always attached
+      data.uid = uid;
 
-      res.status(200).send({ success: true, user: data });
+      delete data.password; // optional sanitization
+
+      return res.status(200).send({
+        success: true,
+        user: data,
+      });
     } catch (error) {
       console.error('Error fetching user profile:', error);
-      res.status(500).send({ success: false, message: error.message });
+      return res.status(500).send({
+        success: false,
+        message: error.message,
+      });
+    }
+  });
+});
+
+exports.verifySessionUser = onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      if (req.method !== "POST") {
+        return res.status(405).send({ success: false, message: "Method Not Allowed" });
+      }
+
+      const { uid } = req.body;
+      if (!uid) {
+        return res.status(400).send({ success: false, message: "Missing uid" });
+      }
+
+      const userRef = admin.firestore().collection("users").doc(uid);
+      const snap = await userRef.get();
+
+      if (!snap.exists) {
+        return res.status(404).send({ success: false, message: "User not found" });
+      }
+
+      const data = snap.data();
+      return res.status(200).send({
+        success: true,
+        role: data.role,
+        user: {
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          role: data.role,
+        },
+      });
+    } catch (error) {
+      console.error("🔥 Error verifying session:", error);
+      return res.status(500).send({ success: false, message: error.message });
     }
   });
 });

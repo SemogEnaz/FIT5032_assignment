@@ -8,6 +8,7 @@ admin.initializeApp();
 const {
   createUser,
   getUserProfile,
+  verifySessionUser,
 } = require('./src/user');
 
 // Event operations
@@ -39,6 +40,7 @@ const {
 // Users
 exports.createUser = createUser;
 exports.getUserProfile = getUserProfile;
+exports.verifySessionUser = verifySessionUser;
 
 // Events
 exports.creatEvent = createEvent;

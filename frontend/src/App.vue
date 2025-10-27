@@ -1,25 +1,41 @@
 <template>
   <div v-if="showHeader" class="d-flex flex-column align-items-center">
-
-    <h1 class="mt-3">Clayton Pool Assocation</h1>
+    <h1 class="mt-3 text-center">Clayton Pool Association</h1>
 
     <nav class="mt-3 w-100">
-      <ul class="nav nav-pills nav-justified px-3">
-        <li class="nav-item"><RouterLink class="nav-link" to="/">Home</RouterLink></li>
-        <li class="nav-item"><RouterLink class="nav-link" to="/events">Events</RouterLink></li>
-        <li class="nav-item"><RouterLink class="nav-link" to="/admin">AdminDashboard</RouterLink></li>
+      <ul class="nav nav-pills nav-justified px-3 flex-wrap">
+        <li class="nav-item">
+          <RouterLink class="nav-link" to="/">Home</RouterLink>
+        </li>
+        <li class="nav-item">
+          <RouterLink class="nav-link" to="/events">Events</RouterLink>
+        </li>
+
+        <!-- 👇 Show only if logged in and role is admin -->
+        <li v-if="isAdmin" class="nav-item">
+          <RouterLink class="nav-link" to="/admin">Admin Dashboard</RouterLink>
+        </li>
 
         <!-- AUTH SLOT -->
-        <li class="nav-item" @click="logout" v-if="isLoggedIn">
+        <li v-if="isLoggedIn" class="nav-item">
+          <div class="nav-link" @click="logout" style="cursor: pointer">
             Logout
+          </div>
         </li>
-        <li class="nav-item" v-else>
-          <RouterLink class="nav-link" to="/loginregister">Login | Register</RouterLink></li>
+
+        <li v-else class="nav-item">
+          <RouterLink class="nav-link" to="/loginregister">
+            Login | Register
+          </RouterLink>
+        </li>
       </ul>
     </nav>
-
   </div>
-  <RouterView class="mt-4 flex-column align-items-center w-100" style="width: 95%"/>
+
+  <RouterView
+    class="mt-4 flex-column align-items-center w-100"
+    style="width: 95%"
+  />
 </template>
 
 <script setup>
@@ -27,10 +43,10 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
-const route = useRoute();
+const route = useRoute()
 
-const showHeader = computed(() => route.name !== 'GetEventAPI' && route.name !== 'GetSummaryAPI')
-console.log('route.name:', route.name, 'route.path:', route.path)
+// hide header for special API pages
+const showHeader = computed(() => !['GetEventAPI', 'GetSummaryAPI'].includes(route.name))
 
 /* ---------- cookie helpers ---------- */
 function getCookie(name) {
@@ -57,6 +73,11 @@ const isLoggedIn = computed(() => {
   return !!sessionUser.value && success
 })
 
+// ✅ computed admin checker
+const isAdmin = computed(() => {
+  return isLoggedIn.value && sessionUser.value?.role === 'admin'
+})
+
 /* ---------- logout ---------- */
 function logout() {
   localStorage.removeItem('sessionUser')
@@ -66,7 +87,7 @@ function logout() {
   router.push('/') // optional redirect
 }
 
-/* keep header in sync if other tabs log in/out */
+/* ---------- storage sync ---------- */
 function onStorage(e) {
   if (e.key === 'sessionUser' || e.key === null) refreshAuth()
 }
@@ -79,6 +100,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('storage', onStorage)
 })
 </script>
+
 
 <style scoped>
 /* optional: make the logout button look like other pills */

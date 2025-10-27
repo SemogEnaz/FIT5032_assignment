@@ -135,11 +135,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 // 🔥 Firebase Auth
-import { getAuth, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, updateProfile } from 'firebase/auth'
+import { getAuth, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
 // make sure your firebase app is initialized once (e.g., in src/firebase/init.js)
 const auth = getAuth()
 
@@ -169,10 +169,10 @@ const registerError = ref('')
 // admin seed (kept for dev convenience)
 const ADMIN_USER = {
   id: 'admin',
-  firstName: 'Admin',
-  lastName: 'User',
-  email: 'admin@claytonpool.local',
-  password: 'Admin#123',
+  firstName: 'admin',
+  lastName: 'admin',
+  email: 'admin@admin.admin',
+  password: '',
   address: '',
   phone: '',
   role: 'admin'
@@ -180,11 +180,6 @@ const ADMIN_USER = {
 
 // ensure admin exists once in localStorage
 ;(function ensureAdminSeed(){
-  const list = JSON.parse(localStorage.getItem('users') || '[]');
-  if (!list.some(u => u.email?.toLowerCase() === ADMIN_USER.email.toLowerCase())) {
-    list.push(ADMIN_USER);
-    localStorage.setItem('users', JSON.stringify(list));
-  }
 })()
 
 /* -------------------- validators -------------------- */
@@ -249,11 +244,7 @@ function setCookie(name, value, maxAgeSeconds = 60 * 60 * 24 * 7) {
   document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; path=/; max-age=${maxAgeSeconds}; samesite=lax`
 }
 
-function getUsers() {
-  return JSON.parse(localStorage.getItem('users') || '[]')
-}
-
-async function saveUsers(user) {
+async function saveUser(user) {
   console.log("📦 Sending user:", user);
 
   try {
@@ -267,7 +258,7 @@ async function saveUsers(user) {
         email: user.email,
         address: register.value.address,
         phone: register.value.phone,
-        role: "member",
+        role: user.role,
       }),
     });
 
@@ -292,6 +283,7 @@ async function saveUsers(user) {
 }
 
 function setSessionUser(user) {
+  console.log('setting user as:', user)
   localStorage.setItem('sessionUser', JSON.stringify(user))
   setCookie('sessionUser', user.email)
   setCookie('loginSuccess', 'true')
@@ -302,17 +294,6 @@ async function submitLogin() {
   loginError.value = ''
   validateLoginEmail(true)
   if (errors.value.loginEmail) return
-
-  // dev admin bypass (still allowed)
-  if (
-    login.value.email.toLowerCase() === ADMIN_USER.email.toLowerCase() &&
-    login.value.password === ADMIN_USER.password
-  ) {
-    setSessionUser(ADMIN_USER)
-    window.dispatchEvent(new StorageEvent('storage', { key: 'sessionUser' }))
-    router.push('/')
-    return
-  }
 
   try {
     busy.value = true
@@ -386,7 +367,7 @@ async function submitRegister() {
       role: register.value.role || 'member'
     }
 
-    await saveUsers(newUser);
+    await saveUser(newUser);
 
     setSessionUser(newUser) // immediate login
 
@@ -427,30 +408,6 @@ async function submitRegister() {
     busy.value = false
   }
 }
-
-/* -------------------- keep UI in sync with Firebase session -------------------- */
-onMounted(() => {
-  onAuthStateChanged(auth, (user) => {
-    if (!user) return
-    // if a Firebase session exists but local session is missing (e.g., refresh), reconstruct it
-    const users = getUsers()
-    let profile = users.find(u => u.email?.toLowerCase() === user.email?.toLowerCase())
-    if (!profile) {
-      profile = {
-        id: user.uid,
-        firstName: user.displayName?.split(' ')?.[0] || '',
-        lastName: user.displayName?.split(' ')?.slice(1).join(' ') || '',
-        email: user.email,
-        password: '',
-        address: '',
-        phone: '',
-        role: (user.email?.toLowerCase() === ADMIN_USER.email.toLowerCase()) ? 'admin' : 'member'
-      }
-      users.push(profile); saveUsers(users)
-    }
-    setSessionUser(profile)
-  })
-})
 
 /* -------------------- UI helpers -------------------- */
 function toggleMode() {
