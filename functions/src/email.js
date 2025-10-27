@@ -31,7 +31,7 @@ exports.sendWelcomeEmail = onRequest((req, res) => {
   });
 });
 
-exports.sendEventReminders = onSchedule("every 1 hours", async (event) => {
+exports.sendEventReminders = onSchedule("every 12 hours", async (event) => {
   const db = admin.firestore();
   const now = new Date();
   const next24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
