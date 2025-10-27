@@ -110,8 +110,59 @@ exports.verifySessionUser = onRequest((req, res) => {
         },
       });
     } catch (error) {
-      console.error("🔥 Error verifying session:", error);
+      console.error("  Error verifying session:", error);
       return res.status(500).send({ success: false, message: error.message });
+    }
+  });
+});
+
+exports.deleteUser = onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      if (req.method !== "POST") {
+        return res.status(405).send("Method Not Allowed");
+      }
+
+      const { uid } = req.body;
+      if (!uid) {
+        return res.status(400).json({ success: false, message: "Missing UID" });
+      }
+
+      const db = admin.firestore();
+
+      // Delete from Auth
+      await admin.auth().deleteUser(uid);
+
+      // Delete from Firestore (assuming collection is 'users')
+      await db.collection("users").doc(uid).delete();
+
+      res.status(200).json({ success: true, message: `User ${uid} deleted.` });
+    } catch (err) {
+      console.error("  Error deleting user:", err);
+      res.status(500).json({ success: false, message: err.message });
+    }
+  });
+});
+
+exports.getAllUsers = onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      const db = admin.firestore();
+      const snapshot = await db.collection("users").get();
+
+      const users = snapshot.docs.map((doc) => ({
+        uid: doc.id,
+        ...doc.data(),
+      }));
+
+      res.status(200).json({
+        success: true,
+        count: users.length,
+        users,
+      });
+    } catch (err) {
+      console.error("  Error fetching users:", err);
+      res.status(500).json({ success: false, message: err.message });
     }
   });
 });

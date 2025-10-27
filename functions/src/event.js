@@ -5,7 +5,7 @@ const cors = require("cors")({ origin: true });
 exports.createEvent = onRequest((req, res) => {
   cors(req, res, async () => {
     try {
-      // ✅ Only allow POST requests
+      //   Only allow POST requests
       if (req.method !== "POST") {
         return res.status(405).send("Method Not Allowed");
       }
@@ -20,12 +20,12 @@ exports.createEvent = onRequest((req, res) => {
         attendance
       } = req.body;
 
-      // ✅ Validate required fields
+      //   Validate required fields
       if (!title || !summary || !start || !street || !suburb || !state) {
         return res.status(400).send("Missing required fields: title, summary, start, location");
       }
 
-      // ✅ Validate image URL (basic)
+      //   Validate image URL (basic)
       if (image && !/^https?:\/\/.+/.test(image)) {
         return res.status(400).send("Invalid image URL");
       }
@@ -41,7 +41,7 @@ exports.createEvent = onRequest((req, res) => {
         attendance
       };
 
-      // ✅ Save to Firestore
+      //   Save to Firestore
       const ref = await admin.firestore().collection("events").add(eventData);
 
       res.status(200).send({
@@ -50,73 +50,11 @@ exports.createEvent = onRequest((req, res) => {
         message: "Event created successfully.",
       });
     } catch (error) {
-      console.error("🔥 Error creating event:", error);
+      console.error(" Error creating event:", error);
       res.status(500).send({
         success: false,
         message: "Error creating event: " + error.message,
       });
-    }
-  });
-});
-
-exports.getRecentEvents = onRequest((req, res) => {
-  cors(req, res, async () => {
-    try {
-      const eventsRef = admin.firestore().collection('events');
-      const snapshot = await eventsRef
-          .orderBy('start', 'desc')
-          .limit(3)
-          .get();
-
-      const events = snapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          start: data.start.toDate().toISOString(),
-        };
-      });
-
-      res.status(200).send({ success: true, events });
-    } catch (error) {
-      console.error('🔥 Error fetching recent events:', error);
-      res.status(500).send({
-        success: false,
-        message: 'Error fetching events: ' + error.message,
-      });
-    }
-  });
-});
-
-exports.registerForEvent = onRequest((req, res) => {
-  cors(req, res, async () => {
-    try {
-      if (req.method !== "POST") {
-        return res.status(405).send("Method Not Allowed");
-      }
-
-      const { eventId, uid, email } = req.body;
-      if (!eventId || !uid || !email) {
-        return res.status(400).send("Missing eventId, uid, or email");
-      }
-
-      const regRef = admin
-          .firestore()
-          .collection("events")
-          .doc(eventId)
-          .collection("registrations")
-          .doc(uid);
-
-      await regRef.set({
-        uid,
-        email,
-        registeredAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-
-      res.status(200).send({ success: true, message: "User registered successfully" });
-    } catch (error) {
-      console.error("🔥 Error registering:", error);
-      res.status(500).send({ success: false, message: error.message });
     }
   });
 });
@@ -173,7 +111,7 @@ exports.rateEvent = onRequest((req, res) => {
         message: "Rating submitted successfully.",
       });
     } catch (error) {
-      console.error("🔥 Error rating event:", error);
+      console.error(" Error rating event:", error);
       res.status(500).send({ success: false, message: error.message });
     }
   });
@@ -213,7 +151,7 @@ exports.getEventRating = onRequest((req, res) => {
         userRating: userRating,
       });
     } catch (error) {
-      console.error("🔥 Error fetching rating:", error);
+      console.error(" Error fetching rating:", error);
       res.status(500).send({ success: false, message: error.message });
     }
   });
@@ -222,7 +160,7 @@ exports.getEventRating = onRequest((req, res) => {
 exports.deleteEvent = onRequest((req, res) => {
   cors(req, res, async () => {
     try {
-      // ✅ Allow only POST requests
+      //   Allow only POST requests
       if (req.method !== "POST") {
         return res.status(405).send({ success: false, message: "Method Not Allowed" });
       }
@@ -235,13 +173,13 @@ exports.deleteEvent = onRequest((req, res) => {
       const db = admin.firestore();
       const eventRef = db.collection("events").doc(eventId);
 
-      // ✅ Check if event exists
+      //   Check if event exists
       const eventSnap = await eventRef.get();
       if (!eventSnap.exists) {
         return res.status(404).send({ success: false, message: "Event not found" });
       }
 
-      // ✅ Delete nested subcollections (registrations, ratings)
+      //   Delete nested subcollections (registrations, ratings)
       const subcollections = await eventRef.listCollections();
       for (const sub of subcollections) {
         const subDocs = await sub.listDocuments();
@@ -250,16 +188,16 @@ exports.deleteEvent = onRequest((req, res) => {
         }
       }
 
-      // ✅ Delete main event document
+      //   Delete main event document
       await eventRef.delete();
 
-      console.log(`🗑️ Event ${eventId} deleted successfully`);
+      console.log(`  Event ${eventId} deleted successfully`);
       return res.status(200).send({
         success: true,
         message: `Event ${eventId} deleted successfully.`,
       });
     } catch (error) {
-      console.error("🔥 Error deleting event:", error);
+      console.error("  Error deleting event:", error);
       return res.status(500).send({
         success: false,
         message: "Error deleting event: " + error.message,
@@ -357,7 +295,7 @@ exports.registerOrAttendEvent = onRequest((req, res) => {
 
       res.status(400).send({ success: false, message: "Invalid action" });
     } catch (error) {
-      console.error("🔥 Error registering/attending event:", error);
+      console.error("  Error registering/attending event:", error);
       res.status(500).send({
         success: false,
         message: "Error registering or marking attendance: " + error.message,
@@ -398,20 +336,20 @@ exports.populateMockEvents = onRequest((req, res) => {
       const db = admin.firestore();
       const eventsRef = db.collection("events");
 
-      // ✅ Delete all existing events
+      //   Delete all existing events
       const existing = await eventsRef.listDocuments();
       for (const doc of existing) await doc.delete();
-      console.log(`🗑️ Deleted ${existing.length} old events.`);
+      console.log(`  Deleted ${existing.length} old events.`);
 
       const today = new Date();
       const mockEvents = [];
       const suburbs = [
         "Clayton",
         "Glen Waverley",
-        "Richmond",
-        "Docklands",
-        "Carlton",
-        "St Kilda",
+        "Burwood",
+        "Ormond",
+        "Springvale",
+        "Oakleigh",
       ];
 
       // Helper to format dates relative to today
@@ -446,7 +384,7 @@ exports.populateMockEvents = onRequest((req, res) => {
         });
       }
 
-      // ✅ Batch add mock events
+      //   Batch add mock events
       const batch = db.batch();
       mockEvents.forEach((e) => {
         const ref = eventsRef.doc();
@@ -455,13 +393,13 @@ exports.populateMockEvents = onRequest((req, res) => {
 
       await batch.commit();
 
-      console.log(`✅ Added ${mockEvents.length} mock events.`);
+      console.log(`  Added ${mockEvents.length} mock events.`);
       res.status(200).send({
         success: true,
         message: `${mockEvents.length} mock events created.`,
       });
     } catch (error) {
-      console.error("🔥 Error populating mock events:", error);
+      console.error("  Error populating mock events:", error);
       res.status(500).send({
         success: false,
         message: "Error populating mock events: " + error.message,
@@ -501,7 +439,7 @@ exports.getUpcomingEvents = onRequest((req, res) => {
         events,
       });
     } catch (error) {
-      console.error("🔥 Error fetching upcoming events:", error);
+      console.error("  Error fetching upcoming events:", error);
       return res.status(500).json({
         success: false,
         message: "Error fetching upcoming events: " + error.message,
@@ -541,7 +479,7 @@ exports.getPastEvents = onRequest((req, res) => {
         events,
       });
     } catch (error) {
-      console.error("🔥 Error fetching past events:", error);
+      console.error("  Error fetching past events:", error);
       return res.status(500).json({
         success: false,
         message: "Error fetching past events: " + error.message,
@@ -550,3 +488,44 @@ exports.getPastEvents = onRequest((req, res) => {
   });
 });
 
+exports.getAllEvents = onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      const db = admin.firestore();
+      const snapshot = await db.collection("events").orderBy("start", "desc").get();
+
+      if (snapshot.empty) {
+        return res.status(200).json({
+          success: true,
+          message: "No events found",
+          events: [],
+        });
+      }
+
+      const events = snapshot.docs.map((doc) => {
+        const data = doc.data();
+
+        // Convert Firestore Timestamps → ISO strings
+        const start = data.start.toDate ? data.start.toDate().toISOString() : data.start;
+
+        return {
+          id: doc.id,
+          ...data,
+          start,
+        };
+      });
+
+      res.status(200).json({
+        success: true,
+        count: events.length,
+        events,
+      });
+    } catch (error) {
+      console.error("🔥 Error fetching all events:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error fetching all events: " + error.message,
+      });
+    }
+  });
+});

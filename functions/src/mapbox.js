@@ -97,7 +97,7 @@ exports.getMapData = onRequest((req, res) => {
       res.status(200).json({
         success: true,
         map: {
-          token: MAPBOX_TOKEN, // ✅ Return token for JS map initialization (if needed)
+          token: MAPBOX_TOKEN, //   Return token for JS map initialization (if needed)
           style: styleData,
           center,
           zoom: 10,
@@ -105,7 +105,7 @@ exports.getMapData = onRequest((req, res) => {
         },
       });
     } catch (error) {
-      console.error("🔥 Error building map data:", error);
+      console.error("  Error building map data:", error);
       res.status(500).json({
         success: false,
         message: "Error fetching map data: " + error.message,
@@ -141,6 +141,81 @@ exports.getDrivingDistance = onRequest((req, res) => {
     } catch (error) {
       console.error("Error fetching driving distance:", error);
       res.status(500).send({ success: false, message: error.message });
+    }
+  });
+});
+
+exports.getNearbyEvents = onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      // --- 1️⃣ Validate method
+      if (req.method !== "POST") {
+        return res.status(405).send("Method Not Allowed");
+      }
+
+      // --- 2️⃣ Extract and validate inputs
+      const { lat, lng, radiusKm = 25 } = req.body;
+      if (typeof lat !== "number" || typeof lng !== "number") {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid or missing coordinates.",
+        });
+      }
+
+      const db = admin.firestore();
+
+      // --- 3️⃣ Fetch events
+      const snapshot = await db.collection("events").get();
+      const events = [];
+
+      snapshot.forEach((doc) => {
+        const e = doc.data();
+        if (e.lat && e.lng) {
+          // --- 4️⃣ Haversine distance (in km)
+          const R = 6371; // Earth radius (km)
+          const dLat = ((e.lat - lat) * Math.PI) / 180;
+          const dLng = ((e.lng - lng) * Math.PI) / 180;
+          const a =
+            Math.sin(dLat / 2) ** 2 +
+            Math.cos(lat * Math.PI / 180) *
+              Math.cos(e.lat * Math.PI / 180) *
+              Math.sin(dLng / 2) ** 2;
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+          const distance = R * c;
+
+          // --- 5️⃣ Keep only nearby events
+          if (distance <= radiusKm) {
+            events.push({
+              id: doc.id,
+              title: e.title,
+              summary: e.summary || "",
+              street: e.street,
+              suburb: e.suburb,
+              state: e.state,
+              start: e.start,
+              distance,
+              lat: e.lat,
+              lng: e.lng,
+            });
+          }
+        }
+      });
+
+      // --- 6️⃣ Sort by distance ascending
+      events.sort((a, b) => a.distance - b.distance);
+
+      res.status(200).json({
+        success: true,
+        count: events.length,
+        radiusKm,
+        events,
+      });
+    } catch (error) {
+      console.error("  Error fetching nearby events:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error fetching nearby events: " + error.message,
+      });
     }
   });
 });

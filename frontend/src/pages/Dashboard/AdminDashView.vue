@@ -16,10 +16,16 @@
             <span class="tile__desc">Add new events to the club calendar.</span>
           </RouterLink>
 
-          <RouterLink class="tile" to="/admin/manageEvents" aria-label="Manage Users">
+          <RouterLink class="tile" to="/admin/manageEvents" aria-label="Manage Events">
             <span class="tile__emoji" aria-hidden="true">🔎</span>
             <span class="tile__title">Manage Events</span>
             <span class="tile__desc">Search or edit events</span>
+          </RouterLink>
+
+          <RouterLink class="tile" to="/admin/userManagement" aria-label="Manage Users">
+            <span class="tile__emoji" aria-hidden="true">👥</span>
+            <span class="tile__title">Manage Users</span>
+            <span class="tile__desc">View and delete users</span>
           </RouterLink>
         </nav>
       </div>

@@ -18,7 +18,7 @@ exports.getChartData = onRequest((req, res) => {
           .where("start", ">=", admin.firestore.Timestamp.fromDate(past))
           .get();
 
-      // ✅ Always return a consistent JSON response
+      //   Always return a consistent JSON response
       if (snapshot.empty) {
         console.log("⚠️ No events found in last 15 days");
         return res.status(200).json({ success: true, data: [] });
@@ -28,7 +28,7 @@ exports.getChartData = onRequest((req, res) => {
       const totals = {};
       snapshot.forEach((doc) => {
         const e = doc.data();
-        // ✅ Convert Firestore Timestamp -> JS Date
+        //   Convert Firestore Timestamp -> JS Date
         const eventDate = e.start.toDate().toISOString().split("T")[0];
 
         if (!totals[eventDate]) {
@@ -48,15 +48,15 @@ exports.getChartData = onRequest((req, res) => {
           }))
           .sort((a, b) => new Date(a.date) - new Date(b.date));
 
-      console.log("✅ Returning result:", result);
+      console.log("  Returning result:", result);
 
-      // ✅ Return JSON with consistent format
+      //   Return JSON with consistent format
       return res.status(200).json({
         success: true,
         data: result,
       });
     } catch (error) {
-      console.error("🔥 Error fetching attendance:", error);
+      console.error(" Error fetching attendance:", error);
       return res.status(500).json({
         success: false,
         message: error.message,

@@ -9,13 +9,13 @@ const {
   createUser,
   getUserProfile,
   verifySessionUser,
+  deleteUser,
+  getAllUsers,
 } = require('./src/user');
 
 // Event operations
 const {
   createEvent,
-  getRecentEvents,
-  registerForEvent,
   rateEvent,
   getEventRating,
   deleteEvent,
@@ -24,6 +24,7 @@ const {
   populateMockEvents,
   getUpcomingEvents,
   getPastEvents,
+  getAllEvents,
 } = require('./src/event');
 
 const {
@@ -34,6 +35,7 @@ const {
   getLatLngFromAddress,
   getMapData,
   getDrivingDistance,
+  getNearbyEvents,
 } = require('./src/mapbox');
 
 const {
@@ -45,11 +47,11 @@ const {
 exports.createUser = createUser;
 exports.getUserProfile = getUserProfile;
 exports.verifySessionUser = verifySessionUser;
+exports.deleteUser = deleteUser;
+exports.getAllUsers = getAllUsers;
 
 // Events
 exports.creatEvent = createEvent;
-exports.getRecentEvents = getRecentEvents;
-exports.registerForEvent = registerForEvent;
 exports.rateEvent = rateEvent;
 exports.getEventRating = getEventRating;
 exports.deleteEvent = deleteEvent;
@@ -58,6 +60,7 @@ exports.getEventRegistrationStatus = getEventRegistrationStatus;
 exports.populateMockEvents = populateMockEvents;
 exports.getUpcomingEvents = getUpcomingEvents;
 exports.getPastEvents = getPastEvents;
+exports.getAllEvents = getAllEvents;
 
 // Chart
 exports.getChartData = getChartData;
@@ -66,6 +69,7 @@ exports.getChartData = getChartData;
 exports.getLatLngFromAddress = getLatLngFromAddress;
 exports.getMapData = getMapData;
 exports.getDrivingDistance = getDrivingDistance;
+exports.getNearbyEvents = getNearbyEvents;
 
 // Email
 exports.sendWelcomeEmail = sendWelcomeEmail;

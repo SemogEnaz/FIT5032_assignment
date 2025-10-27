@@ -63,7 +63,7 @@
 
 <script setup>
 import { reactive, computed } from "vue";
-import EventCard from "@/components/EventCard.vue"; // ✅ adjust path as needed
+import EventCard from "@/components/EventCard.vue"; //   adjust path as needed
 
 const f = reactive({
   title: "",
@@ -106,7 +106,7 @@ async function getLatLng() {
     if (data.success) {
       f.lat = data.lat;
       f.lng = data.lng;
-      console.log("✅ Coordinates:", data.lat, data.lng);
+      console.log("  Coordinates:", data.lat, data.lng);
     } else {
       alert("⚠️ Could not get coordinates: " + data.message);
     }
@@ -142,7 +142,7 @@ async function saveEvent() {
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || "Failed to create event");
 
-    alert("✅ Event created successfully!");
+    alert("  Event created successfully!");
     reset();
   } catch (e) {
     console.error("❌ Error creating event:", e);

@@ -6,7 +6,9 @@
       <RouterLink to="/admin" class="link fw-semibold text-decoration-none">← Admin home</RouterLink>
     </div>
 
-    <div class="card p-3 shadow-sm d-flex flex-column">
+    <LoadingScreen v-if="!events.length" />
+
+    <div v-else class="card p-3 shadow-sm d-flex flex-column">
       <!-- Search Bar -->
       <div class="mb-3">
         <span class="p-input-icon-left">
@@ -49,6 +51,7 @@
         </Column>
       </DataTable>
     </div>
+
   </main>
 </template>
 
@@ -61,6 +64,7 @@ import DataTable from "primevue/datatable"
 import Column from "primevue/column"
 import InputText from "primevue/inputtext"
 import Button from "primevue/button"
+import LoadingScreen from "@/components/LoadingScreen.vue"
 
 const events = ref([])
 const filters = ref({ name: "" })
@@ -74,7 +78,7 @@ onMounted(async () => {
 // Fetch events from your Cloud Function
 async function fetchEvents() {
   try {
-    const res = await axios.get("https://getrecentevents-5bgqwovi2q-uc.a.run.app")
+    const res = await axios.get("https://us-central1-fit5032-week6-da697.cloudfunctions.net/getAllEvents")
     if (res.data?.success && Array.isArray(res.data.events)) {
       events.value = res.data.events.map(e => ({
         id: e.id,

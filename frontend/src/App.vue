@@ -39,7 +39,7 @@ const router = useRouter()
 const route = useRoute()
 
 // hide header for special API pages
-const showHeader = computed(() => !['GetEventAPI', 'GetSummaryAPI'].includes(route.name))
+const showHeader = computed(() => !['getUpcomingEventAPI', 'getEventByRadiusAPI'].includes(route.name))
 
 /* ---------- cookie helpers ---------- */
 function getCookie(name) {
@@ -66,7 +66,7 @@ const isLoggedIn = computed(() => {
   return !!sessionUser.value && success
 })
 
-// ✅ computed admin checker
+//   computed admin checker
 const isAdmin = computed(() => {
   return isLoggedIn.value && sessionUser.value?.role === 'admin'
 })

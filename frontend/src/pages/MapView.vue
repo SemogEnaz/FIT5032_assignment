@@ -107,18 +107,18 @@ async function showRouteToEvent(event) {
     const userLat = pos.coords.latitude;
     const userLng = pos.coords.longitude;
 
-    // ✅ Remove previous blue marker if it exists
+    //   Remove previous blue marker if it exists
     if (currentMarker) {
       currentMarker.remove();
     }
 
-    // ✅ Add blue marker for current location
+    //   Add blue marker for current location
     currentMarker = new mapboxgl.Marker({ color: "blue" })
       .setLngLat([userLng, userLat])
       .setPopup(new mapboxgl.Popup().setText("Your Location"))
       .addTo(mapInstance.value);
 
-    // ✅ Fetch driving route using Mapbox Directions API
+    //   Fetch driving route using Mapbox Directions API
     const directionsUrl = `https://api.mapbox.com/directions/v5/mapbox/driving/${userLng},${userLat};${event.lng},${event.lat}?geometries=geojson&access_token=${mapboxgl.accessToken}`;
     const res = await fetch(directionsUrl);
     const data = await res.json();
@@ -130,7 +130,7 @@ async function showRouteToEvent(event) {
 
     const route = data.routes[0].geometry;
 
-    // ✅ Remove existing route if any
+    //   Remove existing route if any
     if (mapInstance.value.getLayer(routeLayerId)) {
       mapInstance.value.removeLayer(routeLayerId);
     }
@@ -138,7 +138,7 @@ async function showRouteToEvent(event) {
       mapInstance.value.removeSource(routeSourceId);
     }
 
-    // ✅ Add new route layer
+    //   Add new route layer
     mapInstance.value.addSource(routeSourceId, {
       type: "geojson",
       data: {

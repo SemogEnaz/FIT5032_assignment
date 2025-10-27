@@ -9,17 +9,26 @@ import AdminEvents from '@/pages/Dashboard/AdminActionsView.vue/AdminEvents.vue'
 import AdminManageEvent from '@/pages/Dashboard/AdminActionsView.vue/AdminManageEvent.vue';
 import GetEventAPI from '@/pages/API/GetEventAPI.vue';
 import MapView from "@/pages/MapView.vue";
+import GetEventsByRaidus from "@/pages/API/GetEventsByRaidus.vue";
+import UserManagement from "@/pages/Dashboard/AdminActionsView.vue/UserManagement.vue";
 
 const routes = [
+  
+    // Open pages
     { path: '/events', name: "events", component: EventView},
     { path: '/map', name: "map", component: MapView},
     { path: '/loginRegister', name: "loginregister", component: LoginRegisterView},
 
+    // Admin pages
     { path: '/admin', name: 'AdminHome', component: AdminDashView },
     { path: '/admin/events', name: 'AdminEvents', component: AdminEvents },
     { path: '/admin/manageEvents', name: 'AdminManageEvents', component: AdminManageEvent },
+    { path: '/admin/userManagement', name: 'userManagement', component: UserManagement },
 
-    { path: '/GetEventAPI', name: 'GetEventAPI', component: GetEventAPI },
+    // API's
+    { path: '/getUpcomingEventAPI', name: 'getUpcomingEventAPI', component: GetEventAPI },
+    { path: '/getEventByRadiusAPI', name: 'getEventByRadiusAPI', component: GetEventsByRaidus },
+    
     { path: '/', name: "homePage", component: HomePageView },
 ]
 
@@ -55,7 +64,7 @@ async function verifyAdminAccess() {
       return;
     }
 
-    console.log("✅ Verified admin access:", res.data.user);
+    console.log("  Verified admin access:", res.data.user);
     return true;
   } catch (err) {
     console.error("❌ Verification error:", err);

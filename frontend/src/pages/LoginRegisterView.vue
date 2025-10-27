@@ -138,7 +138,6 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 
-// 🔥 Firebase Auth
 import { getAuth, setPersistence, browserLocalPersistence, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
 // make sure your firebase app is initialized once (e.g., in src/firebase/init.js)
 const auth = getAuth()
@@ -311,7 +310,7 @@ async function submitLogin() {
     const data = await res.json();
 
     if (res.ok && data.success) {
-      console.log('✅ User profile:', data.user);
+      console.log('  User profile:', data.user);
       setSessionUser(data.user);
       router.push('/');
     } else {
@@ -387,7 +386,7 @@ async function submitRegister() {
       if (!res.ok) {
         console.error('❌ Failed to send email:', data);
       } else {
-        console.log('✅ Successfully sent email:', data);
+        console.log('  Successfully sent email:', data);
       }
     } catch (emailError) {
       console.warn("Welcome email failed to send:", emailError);

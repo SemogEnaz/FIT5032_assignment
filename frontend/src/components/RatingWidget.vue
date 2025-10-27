@@ -32,7 +32,7 @@
       </div>
 
       <div v-if="hasRated" class="text-success small mt-1">
-        ✅ You rated this event {{ current }}★
+          You rated this event {{ current }}★
       </div>
     </div>
   </div>
@@ -42,7 +42,7 @@
 import { ref, onMounted } from "vue";
 import axios from "axios";
 
-const emit = defineEmits(["rated"]); // ✅ Add this
+const emit = defineEmits(["rated"]); //   Add this
 
 const props = defineProps({
   itemId: { type: String, required: true },
@@ -101,7 +101,7 @@ async function rate(value) {
       stats.value.avg = res.data.avgRating;
       stats.value.count = res.data.ratingCount;
 
-      // ✅ Emit new rating to parent
+      //   Emit new rating to parent
       emit("rated", {
         eventId: props.itemId,
         avgRating: res.data.avgRating,

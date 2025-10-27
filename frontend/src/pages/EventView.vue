@@ -54,7 +54,7 @@ const error = ref(null);
 
 onMounted(async () => {
   await getEvents();
-  await syncUserStatuses(); // ✅ sync registration state immediately
+  await syncUserStatuses(); //   sync registration state immediately
 });
 
 function exportCSV() {
@@ -135,7 +135,7 @@ async function getEvents() {
 }
 
 /**
- * ✅ Fetch the user's registration status for all events after load
+ *   Fetch the user's registration status for all events after load
  */
 async function syncUserStatuses() {
   const user = JSON.parse(localStorage.getItem("sessionUser"));
