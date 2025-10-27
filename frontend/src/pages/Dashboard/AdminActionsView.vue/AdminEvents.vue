@@ -1,17 +1,12 @@
 <template>
-  <main class="admin-events py-4">
-    <section class="container mb-4">
-      <div class="d-flex align-items-baseline justify-content-between gap-2">
-        <div>
-          <h1 class="mb-1">Create Event</h1>
-          <p class="text-muted mb-0">Calendar-shaped payload for easy API plug-in later.</p>
-        </div>
-        <router-link class="link-more" to="/admin">← Admin home</router-link>
-      </div>
-    </section>
+  <main class="container admin-events py-4">
+    <div class="position-relative my-4">
+      <RouterLink to="/admin" class="link position-absolute start-0 top-50 translate-middle-y fw-semibold text-decoration-none">← Admin home</RouterLink>
+      <h1 class="text-center mb-0">Create Event</h1>
+    </div>
 
     <section class="section">
-      <div class="container">
+      <div class="">
         <div class="card d-flex">
           <form @submit.prevent="saveEvent" class="d-flex flex-column gap-2">
 
@@ -43,11 +38,6 @@
               <button class="btn btn-outline-dark" type="button" @click="reset">Clear</button>
             </div>
           </form>
-        </div>
-
-        <div class="mt-3 small text-muted">
-          <strong>Preview payload:</strong>
-          <pre class="mt-2 bg-light p-2 rounded">{{ preview }}</pre>
         </div>
       </div>
     </section>

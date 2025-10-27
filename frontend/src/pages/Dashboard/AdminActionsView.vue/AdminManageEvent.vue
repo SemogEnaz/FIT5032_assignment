@@ -1,6 +1,10 @@
 <template>
   <main class="container py-4">
-    <h1 class="mb-4 text-center">Admin Event Management</h1>
+
+    <div class="container position-relative my-4">
+      <RouterLink to="/admin" class="link position-absolute start-0 top-50 translate-middle-y fw-semibold text-decoration-none">← Admin home</RouterLink>
+      <h1 class="text-center mb-0">Admin Event Management</h1>
+    </div>
 
     <div class="card p-3 shadow-sm d-flex flex-column">
       <!-- Search Bar -->
