@@ -9,96 +9,120 @@
     </section>
 
     <!-- 🗺️ Map -->
-    <div id="map" style="height:400px; width: 80%"></div>
+    <div v-if="!error" id="map" style="height:400px; width: 80%"></div>
 
     <!-- Error -->
-    <div v-if="error" class="alert alert-danger text-center container mt-3">
+    <div v-else class="alert alert-danger text-center container mt-3">
       {{ error }}
     </div>
+
+    <div class="container mt-4">
+    <h3 class="mb-3">Nearby Events</h3>
+
+    <DataTable :value="events" paginator :rows="5" responsiveLayout="scroll">
+      <Column field="date" header="Date">
+        <template #body="{ data }">{{ formatDate(data.start) }}</template>
+      </Column>
+      <Column field="title" header="Name"></Column>
+      <Column field="location" header="Location">
+        <template #body="{ data }">{{ data.street }}, {{ data.suburb }}</template>
+      </Column>
+      <Column field="distance" header="Distance (km)">
+        <template #body="{ data }">{{ data.distance?.toFixed(1) || '-' }}</template>
+      </Column>
+      <Column header="Action">
+          <template #body="{ data }">
+            <EventRegistrationButton :event="data" @updated="syncEventStatus" />
+          </template>
+        </Column>
+    </DataTable>
+  </div>
 
   </main>
 </template>
 
 <script setup>
-import axios from "axios";
-import mapboxgl from "mapbox-gl";
 import { ref, onMounted } from "vue";
+import mapboxgl from "mapbox-gl";
+import axios from "axios";
 
-mapboxgl.accessToken =
-  "pk.eyJ1IjoiemFuZWdvbWVzIiwiYSI6ImNrdWdkbTAyaTBwbDIybm9reDc2YTN1cTUifQ.VjtSCzzUg7gg64u2HaAnBg";
+import DataTable from "primevue/datatable";
+import Column from "primevue/column";
 
-let mapInstance = null;
+import EventRegistrationButton from "@/components/EventRegistrationButton.vue";
+
 const events = ref([]);
+const mapInstance = ref(null);
 const error = ref(null);
 
 onMounted(async () => {
-  await getEvents();
-  initMap();
+  await loadMap();
+  await loadEvents();
+  await syncUserStatuses();
 });
 
-async function getEvents() {
+async function loadMap() {
   try {
-    const res = await axios.get(
-      "https://getupcomingevents-5bgqwovi2q-uc.a.run.app"
-    );
-    if (res.data?.success && Array.isArray(res.data.events)) {
-      events.value = res.data.events.map((e) => ({
-        ...e,
-        avgRating: e.avgRating || 0,
-        ratingCount: e.ratingCount || 0,
-        userStatus: null, // 👈 placeholder until we sync
-      }));
-    } else {
-      throw new Error("Unexpected API response");
-    }
+    const res = await axios.get("https://getmapdata-5bgqwovi2q-uc.a.run.app");
+    if (!res.data.success) throw new Error(res.data.message);
+
+    const { token, center, zoom, markers } = res.data.map;
+    mapboxgl.accessToken = token;
+
+    mapInstance.value = new mapboxgl.Map({
+      container: "map",
+      style: "mapbox://styles/mapbox/standard",
+      center,
+      zoom,
+    });
+
+    mapInstance.value.addControl(new mapboxgl.NavigationControl());
+    mapInstance.value.on("load", () => {
+      markers.forEach((m) => {
+        new mapboxgl.Marker({ color: "red" })
+          .setLngLat(m.coordinates)
+          .setPopup(new mapboxgl.Popup().setHTML(`<strong>${m.popup}</strong>`))
+          .addTo(mapInstance.value);
+      });
+    });
+  } catch (err) {
+    console.error("❌ Map initialization failed:", err);
+    error.value = "Could not load map data.";
+  }
+}
+
+async function loadEvents() {
+  try {
+    const res = await axios.get("https://getupcomingevents-5bgqwovi2q-uc.a.run.app");
+    events.value = res.data.events || [];
   } catch (err) {
     console.error("Error fetching events:", err);
-    error.value = "Failed to load events.";
   }
 }
 
-/**
- * 🗺️ Initialize map
- */
-function initMap() {
-  mapInstance = new mapboxgl.Map({
-    container: "map",
-    style: "mapbox://styles/mapbox/standard",
-    center: [144.9631, -37.8136],
-    zoom: 10,
-  });
-
-  mapInstance.addControl(new mapboxgl.NavigationControl());
-
-  mapInstance.on("load", () => {
-    addMarkers(events.value);
-  });
-}
-
-function addMarkers(eventsList) {
-  if (!mapInstance) return;
-  document.querySelectorAll(".mapboxgl-marker").forEach((m) => m.remove());
-
-  const raw = JSON.parse(JSON.stringify(eventsList));
-  raw.forEach((e) => {
-    if (typeof e.lng !== "number" || typeof e.lat !== "number") return;
-
-    const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
-      `<strong>${e.title}</strong><br>${e.street}, ${e.suburb}`
+async function syncUserStatuses() {
+  const user = JSON.parse(localStorage.getItem("sessionUser"));
+  if (!user?.uid) return;
+  for (const e of events.value) {
+    const res = await axios.post(
+      "https://geteventregistrationstatus-5bgqwovi2q-uc.a.run.app",
+      { eventId: e.id, uid: user.uid },
+      { headers: { "Content-Type": "application/json" } }
     );
-
-    new mapboxgl.Marker({ color: "red" })
-      .setLngLat([e.lng, e.lat])
-      .setPopup(popup)
-      .addTo(mapInstance);
-  });
-
-  if (raw.length) {
-    const bounds = new mapboxgl.LngLatBounds();
-    raw.forEach((e) => bounds.extend([e.lng, e.lat]));
-    mapInstance.fitBounds(bounds, { padding: 50 });
+    e.userStatus = res.data?.status || null;
   }
 }
+
+function syncEventStatus({ id, status }) {
+  const event = events.value.find((e) => e.id === id);
+  if (event) event.userStatus = status;
+}
+
+function formatDate(date) {
+    const d = new Date(date);
+    return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+}
+
 </script>
 
 

@@ -61,7 +61,7 @@ function isLoggedIn() {
 async function loadStats() {
   try {
     const user = JSON.parse(localStorage.getItem("sessionUser"));
-    const uid = user?.id || "";
+    const uid = user?.uid || "";
     const res = await axios.get(
       `https://geteventrating-5bgqwovi2q-uc.a.run.app?eventId=${props.itemId}${uid ? `&uid=${uid}` : ""}`
     );
@@ -91,7 +91,7 @@ async function rate(value) {
   try {
     const res = await axios.post("https://rateevent-5bgqwovi2q-uc.a.run.app", {
       eventId: props.itemId,
-      uid: user.id,
+      uid: user.uid,
       rating: value,
     });
 
