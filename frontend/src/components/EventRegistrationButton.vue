@@ -1,15 +1,26 @@
 <template>
   <div>
-    <!-- Register Button -->
+    <!-- 🔒 Event in the past & not registered -->
+        <button
+      v-if="isPast && !event.userStatus"
+      class="btn btn-secondary btn-sm w-100"
+      disabled
+      title="Registration closed for past events"
+    >
+      Event Closed
+    </button>
+
+
+    <!-- 🕒 Not registered yet -->
     <button
-      v-if="!event.userStatus"
+      v-else-if="!event.userStatus"
       class="btn btn-dark btn-sm w-100"
       @click="handleAction('register')"
     >
       Register
     </button>
 
-    <!-- Mark Attendance Button -->
+    <!-- 🟡 Registered but not attended -->
     <button
       v-else-if="event.userStatus === 'registered'"
       class="btn btn-warning btn-sm w-100"
@@ -18,7 +29,7 @@
       Mark Attendance
     </button>
 
-    <!-- Event Attended -->
+    <!-- 🟢 Attended -->
     <button
       v-else-if="event.userStatus === 'attended'"
       class="btn btn-success btn-sm w-100"
@@ -31,9 +42,8 @@
 
 <script setup>
 import axios from "axios";
-import { defineProps, defineEmits } from "vue";
+import { computed, defineProps, defineEmits } from "vue";
 
-// ✅ Props from parent
 const props = defineProps({
   event: {
     type: Object,
@@ -41,38 +51,38 @@ const props = defineProps({
   },
 });
 
-// ✅ Emit event when status changes
 const emit = defineEmits(["updated"]);
 
-async function handleAction(type) {
+// ✅ Determine if event date has passed
+const isPast = computed(() => {
+  const now = new Date();
+  const eventDate = new Date(props.event.start);
+  return eventDate < now;
+});
+
+async function handleAction(action) {
   const user = JSON.parse(localStorage.getItem("sessionUser"));
   if (!user) {
     alert("Please log in to perform this action.");
     return;
   }
 
-  // If already attended, ignore
+  // prevent marking attendance twice
   if (props.event.userStatus === "attended") return;
-
-  const action = type;
-  const payload = {
-    eventId: props.event.id,
-    uid: user.uid,
-    email: user.email,
-    action,
-  };
-
-  console.log("📤 Sending:", payload);
 
   try {
     const res = await axios.post(
       "https://registerorattendevent-5bgqwovi2q-uc.a.run.app",
-      payload,
+      {
+        eventId: props.event.id,
+        uid: user.id,
+        email: user.email,
+        action,
+      },
       { headers: { "Content-Type": "application/json" } }
     );
 
     if (res.data.success) {
-      // eslint-disable-next-line vue/no-mutating-props
       props.event.userStatus = res.data.status;
       emit("updated", { id: props.event.id, status: res.data.status });
       alert(res.data.message);
@@ -88,9 +98,9 @@ async function handleAction(type) {
 
 <style scoped>
 button {
-  transition: background-color 0.15s ease-in-out, transform 0.1s ease-in-out;
+  transition: transform 0.1s ease-in-out, background-color 0.15s ease-in-out;
 }
-button:hover {
+button:hover:not(:disabled) {
   transform: scale(1.02);
 }
 </style>
