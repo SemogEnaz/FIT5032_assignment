@@ -8,13 +8,21 @@
       </p>
     </section>
 
+    <LoadingScreen v-if="!events.length"/>
+
     <!-- Error -->
-    <div v-if="error" class="alert alert-danger text-center container mt-3">
+    <div v-else-if="error" class="alert alert-danger text-center container mt-3">
       {{ error }}
     </div>
 
     <!-- Event List -->
-    <section v-else class="container mt-5">
+    <section v-else class="container mt-2">
+
+      <!-- Export button -->
+      <div class="mb-3 d-flex justify-content-center">
+        <button class="btn btn-dark" @click="exportCSV">Export Past Events (CSV)</button>
+      </div>
+
       <div class="row g-3">
         <div v-if="filtered.length === 0" class="col-12">
           <div class="border rounded p-4 text-center text-secondary">
@@ -37,6 +45,7 @@
 import axios from "axios";
 import { ref, computed, onMounted } from "vue";
 import EventCard from "@/components/EventCard.vue";
+import LoadingScreen from "@/components/LoadingScreen.vue";
 
 const q = ref("");
 const month = ref("");
@@ -47,6 +56,62 @@ onMounted(async () => {
   await getEvents();
   await syncUserStatuses(); // ✅ sync registration state immediately
 });
+
+function exportCSV() {
+  if (!events.value || events.value.length === 0) {
+    alert("No event data to export.");
+    return;
+  }
+
+  // Define headers for CSV
+  const headers = [
+    "Title",
+    "Date",
+    "Street",
+    "Suburb",
+    "State",
+    "Latitude",
+    "Longitude",
+    "Distance (km)"
+  ];
+
+  // Build rows from events data
+  const rows = events.value.map(e => [
+    e.title || "",
+    formatDate(e.start),
+    e.street || "",
+    e.suburb || "",
+    e.state || "",
+    e.lat ?? "",
+    e.lng ?? "",
+    e.distance ? e.distance.toFixed(2) : ""
+  ]);
+
+  // Convert to CSV string
+  const csvContent = [
+    headers.join(","),      // first line: headers
+    ...rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")) // escape quotes
+  ].join("\n");
+
+  // Create and trigger download
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+
+  const now = new Date().toISOString().split("T")[0];
+  link.setAttribute("download", `past_events${now}.csv`);
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function formatDate(date) {
+    const d = new Date(date);
+    return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+}
 
 async function getEvents() {
   try {

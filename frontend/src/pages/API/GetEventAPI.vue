@@ -35,7 +35,7 @@ export default {
     async getEventAPI() {
       try {
         const response = await axios.get(
-          'https://getrecentevents-5bgqwovi2q-uc.a.run.app'
+          'https://getupcomingevents-5bgqwovi2q-uc.a.run.app'
         );
 
         if (response.data?.success && Array.isArray(response.data.events)) {

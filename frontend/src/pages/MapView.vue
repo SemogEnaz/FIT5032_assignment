@@ -8,59 +8,59 @@
       </p>
     </section>
 
-    <div v-if="!events.length" class="text-center mt-5">
-      <div class="spinner-border text-primary" role="status"></div>
-      <p class="mt-2 text-muted">Loading events and distances...</p>
-    </div>
+    <LoadingScreen v-if="!events.length"/>
 
-    <div v-if="!error" id="map" style="height:400px; width: 90%" class="mb-2"></div>
-
-    <div v-else class="alert alert-danger text-center container mt-3">
+    <div v-else-if="error" class="alert alert-danger text-center container mt-3">
       {{ error }}
     </div>
 
-    <div class="mb-2 mt-5">
-      <h3 class="d-flex justify-content-center">Upcoming Events</h3>
-      <p>Please click on any given row to view event on map!</p>
+    <div v-else class="d-flex flex-column align-items-center justify-content-center">
+      <div id="map" style="height:400px; width: 90%" class="mb-2"></div>
+
+      <div class="mb-2 mt-5">
+        <h3 class="d-flex justify-content-center">Upcoming Events</h3>
+        <p>Please click on any given row to view event on map!</p>
+      </div>
+
+      <DataTable
+        :value="events"
+        paginator
+        :rows="5"
+        responsiveLayout="scroll"
+        style="width: 90%; cursor:pointer;"
+        @row-click="focusEventOnMap"
+      >
+        <Column field="start" header="Date" sortable :sortFunction="sortByDate">
+          <template #body="{ data }">{{ formatDate(data.start) }}</template>
+        </Column>
+
+        <Column field="title" header="Name" sortable></Column>
+
+        <Column header="Location">
+          <template #body="{ data }">{{ data.street }}, {{ data.suburb }}</template>
+        </Column>
+
+        <Column field="distance" header="Distance (km)" sortable :sortFunction="sortByDistance" class="text-center">
+          <template #body="{ data }">{{ data.distance?.toFixed(1) || 'Fetching...' }}</template>
+        </Column>
+
+        <Column header="Actions">
+          <template #body="{ data }">
+            <div class="d-flex flex-column flex-md-row gap-2">
+              <EventRegistrationButton :event="data" @updated="syncEventStatus" />
+
+              <button
+                class="btn btn-outline-primary btn-sm"
+                @click="showRouteToEvent(data)"
+              >
+                Navigate
+              </button>
+            </div>
+          </template>
+        </Column>
+      </DataTable>
     </div>
-
-    <DataTable
-      :value="events"
-      paginator
-      :rows="5"
-      responsiveLayout="scroll"
-      style="width: 90%; cursor:pointer;"
-      @row-click="focusEventOnMap"
-    >
-      <Column field="start" header="Date" sortable :sortFunction="sortByDate">
-        <template #body="{ data }">{{ formatDate(data.start) }}</template>
-      </Column>
-
-      <Column field="title" header="Name" sortable></Column>
-
-      <Column header="Location">
-        <template #body="{ data }">{{ data.street }}, {{ data.suburb }}</template>
-      </Column>
-
-      <Column field="distance" header="Distance (km)" sortable :sortFunction="sortByDistance" class="text-center">
-        <template #body="{ data }">{{ data.distance?.toFixed(1) || 'Fetching...' }}</template>
-      </Column>
-
-      <Column header="Actions">
-        <template #body="{ data }">
-          <div class="d-flex flex-column flex-md-row gap-2">
-            <EventRegistrationButton :event="data" @updated="syncEventStatus" />
-
-            <button
-              class="btn btn-outline-primary btn-sm"
-              @click="showRouteToEvent(data)"
-            >
-              Navigate
-            </button>
-          </div>
-        </template>
-      </Column>
-    </DataTable>
+    
 
   </main>
 </template>
@@ -74,6 +74,7 @@ import DataTable from "primevue/datatable";
 import Column from "primevue/column";
 
 import EventRegistrationButton from "@/components/EventRegistrationButton.vue";
+import LoadingScreen from "@/components/LoadingScreen.vue";
 
 const events = ref([]);
 const mapInstance = ref(null);
