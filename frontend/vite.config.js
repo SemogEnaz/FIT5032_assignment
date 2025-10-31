@@ -7,6 +7,7 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/FIT5032_assignment/', // 👈 this fixes 404s on GitHub Pages
   plugins: [
     vue(),
     vueJsx(),
