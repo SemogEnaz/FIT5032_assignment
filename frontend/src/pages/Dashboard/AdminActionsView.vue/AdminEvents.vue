@@ -89,6 +89,8 @@ const showPreview = computed(() =>
   f.title || f.summary || f.start || f.street || f.suburb || f.state
 );
 
+
+
 // --- Lat/Lng + Save Event ---
 async function getLatLng() {
   try {
@@ -114,6 +116,7 @@ async function getLatLng() {
     console.error("❌ Error fetching coordinates:", err);
   }
 }
+
 
 async function saveEvent() {
   try {

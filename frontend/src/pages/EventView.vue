@@ -55,7 +55,28 @@ const error = ref(null);
 onMounted(async () => {
   await getEvents();
   await syncUserStatuses(); //   sync registration state immediately
+  await getEventCount();
 });
+
+// --- Lat/Lng + Save Event ---
+async function getEventCount() {
+  try {
+    const res = await fetch("https://geteventcount-5bgqwovi2q-uc.a.run.app", {
+      headers: { "Content-Type": "application/json" },
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      const newData = data;
+      console.log(`${newData}`);
+    } else {
+      alert("⚠️ Could not get coordinates: " + data.message);
+    }
+  } catch (err) {
+    console.error("❌ Error fetching coordinates:", err);
+  }
+}
 
 function exportCSV() {
   if (!events.value || events.value.length === 0) {
